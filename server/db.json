@@ -1,0 +1,1469 @@
+{
+  "users": [
+    {
+      "ID": "1",
+      "Name": "Admin User",
+      "Email": "admin@example.com",
+      "Password": "admin123"
+    }
+  ],
+  "userProfiles": [
+    {
+      "user_id": "1",
+      "phone_number": "09390872628",
+      "full_name": "pulaganti Bhargava",
+      "avatar_url": "",
+      "email_notifications": true,
+      "whatsapp_notifications": true,
+      "marketing_notifications": true,
+      "auth_method": "email",
+      "created_at": "2025-07-06T12:25:51.939Z",
+      "ID": "MANAUSER00002",
+      "email": "09390872628@phone.user",
+      "updated_at": "2025-07-06T15:58:16.211Z"
+    },
+    {
+      "user_id": "MANAUSER00002",
+      "full_name": "pulaganti Bhargava",
+      "email": "pulagantibhargav@gmail.com",
+      "phone_number": "09390872628",
+      "auth_method": "phone",
+      "email_notifications": true,
+      "whatsapp_notifications": true,
+      "marketing_notifications": true,
+      "avatar_url": "",
+      "created_at": "2025-07-06T15:57:58.672Z",
+      "updated_at": "2025-07-06T15:57:58.672Z",
+      "id": "MANAUSER00002"
+    }
+  ],
+  "products": [
+    {
+      "id": "1",
+      "name": "Product 1",
+      "description": "Description for Product 1",
+      "price": 105,
+      "image": "/placeholder.svg",
+      "category_id": "1",
+      "stock": 3,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "2",
+      "name": "Product 2",
+      "description": "Description for Product 2",
+      "price": 90,
+      "image": "/placeholder.svg",
+      "category_id": "3",
+      "stock": 81,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "3",
+      "name": "Product 3",
+      "description": "Description for Product 3",
+      "price": 93,
+      "image": "/placeholder.svg",
+      "category_id": "2",
+      "stock": 36,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "4",
+      "name": "Product 4",
+      "description": "Description for Product 4",
+      "price": 104,
+      "image": "/placeholder.svg",
+      "category_id": "1",
+      "stock": 100,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "5",
+      "name": "Product 5",
+      "description": "Description for Product 5",
+      "price": 76,
+      "image": "/placeholder.svg",
+      "category_id": "1",
+      "stock": 24,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "6",
+      "name": "Product 6",
+      "description": "Description for Product 6",
+      "price": 86,
+      "image": "/placeholder.svg",
+      "category_id": "3",
+      "stock": 91,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "7",
+      "name": "Product 7",
+      "description": "Description for Product 7",
+      "price": 12,
+      "image": "/placeholder.svg",
+      "category_id": "2",
+      "stock": 68,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "8",
+      "name": "Product 8",
+      "description": "Description for Product 8",
+      "price": 29,
+      "image": "/placeholder.svg",
+      "category_id": "2",
+      "stock": 80,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "9",
+      "name": "Product 9",
+      "description": "Description for Product 9",
+      "price": 16,
+      "image": "/placeholder.svg",
+      "category_id": "3",
+      "stock": 81,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "10",
+      "name": "Product 10",
+      "description": "Description for Product 10",
+      "price": 98,
+      "image": "/placeholder.svg",
+      "category_id": "2",
+      "stock": 74,
+      "created_at": "2025-07-06T12:25:51.939Z"
+    },
+    {
+      "id": "f63e56b4-d971-4022-90d3-2c2e9ab9539f",
+      "name": "Test Pickle Product",
+      "description": "This is a test pickle product for verification",
+      "price": 15.99,
+      "category": "Veg Pickles",
+      "stock_quantity": 50,
+      "image_url": "/placeholder.svg",
+      "features": [
+        "Spicy",
+        "Traditional Recipe",
+        "Fresh Ingredients"
+      ],
+      "brand": "MANAfoods",
+      "is_active": true,
+      "created_at": "2025-07-06T15:08:12.247Z",
+      "image": "/uploads/product-1751818760332-616440980.webp",
+      "category_id": "Veg Pickles",
+      "stock": 0,
+      "updated_at": "2025-07-06T16:19:26.948Z"
+    },
+    {
+      "id": "af198629-1a71-4118-b49e-a599b347628d",
+      "name": "required",
+      "description": "Once you fill in all these required fields, the \"Add Product\" button should work and submit the form successfully.\n",
+      "price": 200,
+      "image": "/uploads/product-1751819269426-763141571.webp",
+      "category_id": "Fish Pickles",
+      "stock": 133,
+      "features": [],
+      "is_active": true,
+      "brand": "fghjkml,;.'",
+      "tags": [],
+      "expiry_date": "",
+      "barcode": "",
+      "created_at": "2025-07-06T16:35:56.435Z",
+      "updated_at": "2025-07-06T16:35:56.435Z"
+    }
+  ],
+  "orders": [
+    {
+      "id": "1",
+      "user_id": "1",
+      "order_total": 55,
+      "order_status": "processing",
+      "shipping_address": "{\"street\":\"123 Main St\",\"city\":\"Anytown\",\"state\":\"CA\",\"zip\":\"12345\",\"country\":\"USA\"}",
+      "payment_method": "credit_card",
+      "order_date": "2025-06-24T12:25:51.939Z",
+      "tracking_number": "TN17420358",
+      "estimated_delivery": "2025-07-12T12:25:51.939Z",
+      "ID": "ORDER_1751817420358",
+      "razerpay_order_id": "order_1751817421873_4jzlwbjfk",
+      "updated_at": "2025-07-06T17:33:07.846Z",
+      "delivery_partner_name": "BLUEDOT",
+      "delivery_partner_link": "www.bluedot.com"
+    },
+    {
+      "id": "2",
+      "user_id": "1",
+      "order_total": 212,
+      "order_status": "pending",
+      "shipping_address": "{\"street\":\"123 Main St\",\"city\":\"Anytown\",\"state\":\"CA\",\"zip\":\"12345\",\"country\":\"USA\"}",
+      "payment_method": "credit_card",
+      "order_date": "2025-06-28T12:25:51.940Z",
+      "tracking_number": "TN17420358",
+      "estimated_delivery": "2025-07-09T12:25:51.940Z",
+      "ID": "ORDER_1751817420358",
+      "updated_at": "2025-07-06T16:43:08.199Z"
+    },
+    {
+      "id": "3",
+      "user_id": "1",
+      "order_total": 531,
+      "order_status": "shipped",
+      "shipping_address": "{\"street\":\"123 Main St\",\"city\":\"Anytown\",\"state\":\"CA\",\"zip\":\"12345\",\"country\":\"USA\"}",
+      "payment_method": "credit_card",
+      "order_date": "2025-06-11T12:25:51.940Z",
+      "tracking_number": "TN17420358",
+      "estimated_delivery": "2025-07-12T12:25:51.940Z",
+      "ID": "ORDER_1751817420358",
+      "delivery_partner_name": "dfgvbnkml,",
+      "delivery_partner_link": "cvbnm,",
+      "updated_at": "2025-07-06T16:42:47.622Z"
+    },
+    {
+      "id": "4",
+      "user_id": "1",
+      "order_total": 118,
+      "order_status": "cancelled",
+      "shipping_address": "{\"street\":\"123 Main St\",\"city\":\"Anytown\",\"state\":\"CA\",\"zip\":\"12345\",\"country\":\"USA\"}",
+      "payment_method": "credit_card",
+      "order_date": "2025-06-23T12:25:51.940Z",
+      "tracking_number": "TN17420358",
+      "estimated_delivery": "2025-07-15T12:25:51.940Z",
+      "ID": "ORDER_1751817420358",
+      "delivery_partner_name": "dfgvbnkml,",
+      "delivery_partner_link": "cvbnm,",
+      "updated_at": "2025-07-06T17:33:23.836Z"
+    },
+    {
+      "id": "5",
+      "user_id": "1",
+      "order_total": 95,
+      "order_status": "processing",
+      "shipping_address": "{\"street\":\"123 Main St\",\"city\":\"Anytown\",\"state\":\"CA\",\"zip\":\"12345\",\"country\":\"USA\"}",
+      "payment_method": "credit_card",
+      "order_date": "2025-07-04T12:25:51.940Z",
+      "tracking_number": "TN17420358",
+      "estimated_delivery": "2025-07-08T12:25:51.940Z",
+      "ID": "ORDER_1751817420358"
+    },
+    {
+      "user_id": "1",
+      "order_total": 199,
+      "order_status": "pending",
+      "shipping_address": "{\"fullName\":\"pulaganti Bhargava\",\"email\":\"admin@example.com\",\"address\":\"bangalore\",\"city\":\"bangalore\",\"state\":\"karanataka\",\"zipCode\":\"517390\",\"country\":\"United States\"}",
+      "payment_method": "Razorpay",
+      "order_date": "2025-07-06T15:57:00.358Z",
+      "tracking_number": "TN17420358",
+      "estimated_delivery": "2025-07-13T15:57:00.358Z",
+      "razerpay_order_id": "",
+      "razerpay_payment_id": "",
+      "id": "ORDER_1751817420358"
+    },
+    {
+      "user_id": "2",
+      "order_total": 913,
+      "order_status": "pending",
+      "shipping_address": "{\"fullName\":\"pulaganti Bhargava\",\"email\":\"rhagavsurya123@gmail.com\",\"address\":\"bangalore\",\"city\":\"Visakhapatnam\",\"state\":\"Andhra Pradesh\",\"zipCode\":\"517390\",\"country\":\"India\"}",
+      "payment_method": "Razorpay",
+      "order_date": "2025-07-06T18:05:36.499Z",
+      "tracking_number": "TN25136499",
+      "estimated_delivery": "2025-07-13T18:05:36.499Z",
+      "razerpay_order_id": "order_1751825137843_c32d1af6z",
+      "razerpay_payment_id": "",
+      "id": "ORDER_1751825136499",
+      "invoice_id": "INV_1751825136942",
+      "invoice_number": "INV-20250706-669",
+      "updated_at": "2025-07-06T18:05:37.305Z"
+    },
+    {
+      "user_id": "2",
+      "order_total": 735,
+      "order_status": "failed",
+      "shipping_address": "{\"fullName\":\"pulaganti Bhargava\",\"email\":\"rhagavsurya123@gmail.com\",\"address\":\"bhargav 100 \",\"city\":\"Bangalore\",\"state\":\"Karnataka\",\"zipCode\":\"517390\",\"country\":\"India\"}",
+      "payment_method": "Razorpay",
+      "order_date": "2025-07-06T18:37:40.637Z",
+      "tracking_number": "TN27060637",
+      "estimated_delivery": "2025-07-13T18:37:40.637Z",
+      "razerpay_order_id": "order_1751827062862_ykqxjm62f",
+      "razerpay_payment_id": "",
+      "id": "ORDER_1751827060637",
+      "invoice_id": "INV_1751827061197",
+      "invoice_number": "INV-20250707-535",
+      "updated_at": "2025-07-06T18:37:42.198Z"
+    },
+    {
+      "user_id": "2",
+      "order_total": 735,
+      "order_status": "failed",
+      "shipping_address": "{\"fullName\":\"pulaganti Bhargava\",\"email\":\"rhagavsurya123@gmail.com\",\"address\":\"bhargav 100 \",\"city\":\"Bangalore\",\"state\":\"Karnataka\",\"zipCode\":\"517390\",\"country\":\"India\"}",
+      "payment_method": "Razorpay",
+      "order_date": "2025-07-06T18:38:01.246Z",
+      "tracking_number": "TN27081246",
+      "estimated_delivery": "2025-07-13T18:38:01.246Z",
+      "razerpay_order_id": "order_1751827083341_k7ggimy5e",
+      "razerpay_payment_id": "",
+      "id": "ORDER_1751827081246",
+      "invoice_id": "INV_1751827081709",
+      "invoice_number": "INV-20250707-341",
+      "updated_at": "2025-07-06T18:38:02.646Z"
+    }
+  ],
+  "orderItems": [
+    {
+      "id": "1_1",
+      "order_id": "1",
+      "product_id": "3",
+      "product_name": "Product 3",
+      "product_price": 93,
+      "quantity": 2,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "1_2",
+      "order_id": "1",
+      "product_id": "6",
+      "product_name": "Product 6",
+      "product_price": 86,
+      "quantity": 3,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "1_3",
+      "order_id": "1",
+      "product_id": "4",
+      "product_name": "Product 4",
+      "product_price": 104,
+      "quantity": 1,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "2_1",
+      "order_id": "2",
+      "product_id": "4",
+      "product_name": "Product 4",
+      "product_price": 104,
+      "quantity": 1,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "2_2",
+      "order_id": "2",
+      "product_id": "5",
+      "product_name": "Product 5",
+      "product_price": 76,
+      "quantity": 3,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "2_3",
+      "order_id": "2",
+      "product_id": "6",
+      "product_name": "Product 6",
+      "product_price": 86,
+      "quantity": 1,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "3_1",
+      "order_id": "3",
+      "product_id": "9",
+      "product_name": "Product 9",
+      "product_price": 16,
+      "quantity": 3,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "3_2",
+      "order_id": "3",
+      "product_id": "4",
+      "product_name": "Product 4",
+      "product_price": 104,
+      "quantity": 2,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "4_1",
+      "order_id": "4",
+      "product_id": "9",
+      "product_name": "Product 9",
+      "product_price": 16,
+      "quantity": 1,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "4_2",
+      "order_id": "4",
+      "product_id": "1",
+      "product_name": "Product 1",
+      "product_price": 105,
+      "quantity": 3,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "4_3",
+      "order_id": "4",
+      "product_id": "4",
+      "product_name": "Product 4",
+      "product_price": 104,
+      "quantity": 2,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "5_1",
+      "order_id": "5",
+      "product_id": "1",
+      "product_name": "Product 1",
+      "product_price": 105,
+      "quantity": 2,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "5_2",
+      "order_id": "5",
+      "product_id": "10",
+      "product_name": "Product 10",
+      "product_price": 98,
+      "quantity": 1,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "ORDER_1751817420358_1_1751817420632",
+      "order_id": "ORDER_1751817420358",
+      "product_id": "1",
+      "product_name": "Veg Pickle Tomato Pickle",
+      "product_price": 199,
+      "quantity": 1,
+      "product_image": "https://images.unsplash.com/photo-1600626336264-60ef2a55bd33?w=500&h=500&fit=crop"
+    },
+    {
+      "id": "ORDER_1751825136499_6_1751825136671",
+      "order_id": "ORDER_1751825136499",
+      "product_id": "6",
+      "product_name": "Product 6",
+      "product_price": 86,
+      "quantity": 1,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "ORDER_1751825136499_14_1751825136749",
+      "order_id": "ORDER_1751825136499",
+      "product_id": "14",
+      "product_name": "Non Veg Pickle Gongura Chicken Boneless Pickle",
+      "product_price": 429,
+      "quantity": 1,
+      "product_image": "https://images.unsplash.com/photo-1589927986089-35812388d1f4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3MTg3MTl8MHwxfHNlYXJjaHwxfHxBJTIwamFyJTIwb2YlMjBzcGljeSUyMGNoaWNrZW4lMjBwaWNrbGUlMjB3aXRoJTIwZnJlc2glMjBpbmdyZWRpZW50cyUyMGFuZCUyMHRyYWRpdGlvbmFsJTIwc3BpY2VzLnxlbnwwfHx8fDE3NDg3NDkxNDF8MA&ixlib=rb-4.1.0&q=80&w=200$w=500"
+    },
+    {
+      "id": "ORDER_1751825136499_1_1751825136768",
+      "order_id": "ORDER_1751825136499",
+      "product_id": "1",
+      "product_name": "Veg Pickle Tomato Pickle",
+      "product_price": 199,
+      "quantity": 2,
+      "product_image": "https://images.unsplash.com/photo-1600626336264-60ef2a55bd33?w=500&h=500&fit=crop"
+    },
+    {
+      "id": "ORDER_1751827060637_1_1751827060880",
+      "order_id": "ORDER_1751827060637",
+      "product_id": "1",
+      "product_name": "Product 1",
+      "product_price": 105,
+      "quantity": 7,
+      "product_image": "/placeholder.svg"
+    },
+    {
+      "id": "ORDER_1751827081246_1_1751827081363",
+      "order_id": "ORDER_1751827081246",
+      "product_id": "1",
+      "product_name": "Product 1",
+      "product_price": 105,
+      "quantity": 7,
+      "product_image": "/placeholder.svg"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "1",
+      "user_id": "1",
+      "title": "Notification 1",
+      "message": "This is notification 1 message content.",
+      "type": "promotion",
+      "channel": "whatsapp",
+      "status": "sent",
+      "is_read": true,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-07-06T12:25:51.940Z",
+      "created_at": "2025-06-15T12:25:51.940Z"
+    },
+    {
+      "id": "2",
+      "user_id": "1",
+      "title": "Notification 2",
+      "message": "This is notification 2 message content.",
+      "type": "system",
+      "channel": "in_app",
+      "status": "read",
+      "is_read": true,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-06-28T12:25:51.940Z",
+      "created_at": "2025-06-23T12:25:51.940Z"
+    },
+    {
+      "id": "3",
+      "user_id": "1",
+      "title": "Notification 3",
+      "message": "This is notification 3 message content.",
+      "type": "system",
+      "channel": "email",
+      "status": "sent",
+      "is_read": true,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-06-28T12:25:51.940Z",
+      "created_at": "2025-06-12T12:25:51.940Z"
+    },
+    {
+      "id": "4",
+      "user_id": "1",
+      "title": "Notification 4",
+      "message": "This is notification 4 message content.",
+      "type": "order",
+      "channel": "email",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-06-29T12:25:51.940Z",
+      "created_at": "2025-06-14T12:25:51.940Z"
+    },
+    {
+      "id": "5",
+      "user_id": "1",
+      "title": "Notification 5",
+      "message": "This is notification 5 message content.",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": true,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-07-06T12:25:51.940Z",
+      "created_at": "2025-06-21T12:25:51.940Z"
+    },
+    {
+      "id": "6",
+      "user_id": "1",
+      "title": "Notification 6",
+      "message": "This is notification 6 message content.",
+      "type": "promotion",
+      "channel": "email",
+      "status": "read",
+      "is_read": false,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-07-03T12:25:51.940Z",
+      "created_at": "2025-06-16T12:25:51.940Z"
+    },
+    {
+      "id": "7",
+      "user_id": "1",
+      "title": "Notification 7",
+      "message": "This is notification 7 message content.",
+      "type": "promotion",
+      "channel": "email",
+      "status": "sent",
+      "is_read": true,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-06-27T12:25:51.940Z",
+      "created_at": "2025-07-03T12:25:51.940Z"
+    },
+    {
+      "id": "8",
+      "user_id": "1",
+      "title": "Notification 8",
+      "message": "This is notification 8 message content.",
+      "type": "order",
+      "channel": "email",
+      "status": "failed",
+      "is_read": false,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-07-02T12:25:51.940Z",
+      "created_at": "2025-06-17T12:25:51.940Z"
+    },
+    {
+      "id": "9",
+      "user_id": "1",
+      "title": "Notification 9",
+      "message": "This is notification 9 message content.",
+      "type": "campaign",
+      "channel": "whatsapp",
+      "status": "failed",
+      "is_read": false,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-06-29T12:25:51.940Z",
+      "created_at": "2025-06-07T12:25:51.940Z"
+    },
+    {
+      "id": "10",
+      "user_id": "1",
+      "title": "Notification 10",
+      "message": "This is notification 10 message content.",
+      "type": "campaign",
+      "channel": "whatsapp",
+      "status": "sent",
+      "is_read": true,
+      "metadata": "{\"key\":\"value\"}",
+      "sent_at": "2025-07-05T12:25:51.940Z",
+      "created_at": "2025-06-22T12:25:51.940Z"
+    },
+    {
+      "user_id": "1",
+      "title": "Item Added to Wishlist",
+      "message": "An item has been added to your wishlist",
+      "type": "system",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T12:39:24.097Z",
+      "sent_at": "2025-07-06T12:39:24.097Z",
+      "id": "c6acdb79-c0b4-4b2d-97c8-3edf0118a213"
+    },
+    {
+      "user_id": "1",
+      "title": "Item Added to Wishlist",
+      "message": "An item has been added to your wishlist",
+      "type": "system",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T14:39:13.844Z",
+      "sent_at": "2025-07-06T14:39:13.844Z",
+      "id": "e7560a4c-24b4-453f-981a-7b82bd89dc51"
+    },
+    {
+      "user_id": "1",
+      "title": "Item Added to Wishlist",
+      "message": "An item has been added to your wishlist",
+      "type": "system",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T15:43:51.476Z",
+      "sent_at": "2025-07-06T15:43:51.476Z",
+      "id": "141b9fb3-0e2a-4d67-9865-f049b424f95c"
+    },
+    {
+      "user_id": "1",
+      "title": "Item Added to Wishlist",
+      "message": "An item has been added to your wishlist",
+      "type": "system",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T15:53:42.028Z",
+      "sent_at": "2025-07-06T15:53:42.028Z",
+      "id": "f00bea70-8d07-48b4-9890-4a5048be22da"
+    },
+    {
+      "user_id": "1",
+      "title": "Order Confirmed",
+      "message": "Your order #ORDER_1751817420358 has been confirmed and is being processed.",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T15:57:00.688Z",
+      "sent_at": "2025-07-06T15:57:00.688Z",
+      "id": "48e1e80a-9f0b-4e8d-bff3-11eda8581151"
+    },
+    {
+      "user_id": "1",
+      "title": "New Order Received",
+      "message": "New order #ORDER_1751817420358 received from customer 1. Total: $199.00 with 1 item(s).",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "created_at": "2025-07-06T15:57:00.707Z",
+      "sent_at": "2025-07-06T15:57:00.707Z",
+      "id": "d701b341-9e0a-4952-ac13-72ce5119547f"
+    },
+    {
+      "user_id": "1",
+      "title": "Item Added to Wishlist",
+      "message": "An item has been added to your wishlist",
+      "type": "system",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T16:36:14.817Z",
+      "sent_at": "2025-07-06T16:36:14.817Z",
+      "id": "d72a6a78-2d79-4e96-9ffe-dbb4f7f2aac7"
+    },
+    {
+      "user_id": "2",
+      "title": "Order Confirmed",
+      "message": "Your order #ORDER_1751825136499 has been confirmed and is being processed.",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T18:05:36.797Z",
+      "sent_at": "2025-07-06T18:05:36.797Z",
+      "id": "fd6becb5-a3e7-446e-8e95-629c8de7dd34"
+    },
+    {
+      "user_id": "1",
+      "title": "🛒 New Order Received",
+      "message": "New order #ORDER_1751825136499 received from customer 2. Total: $913.00 with 3 item(s). Payment: Razorpay",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"order_id\":\"ORDER_1751825136499\",\"customer_id\":\"2\",\"order_total\":913,\"item_count\":3,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:05:36.836Z\",\"action_url\":\"/admin/orders/ORDER_1751825136499\"}",
+      "created_at": "2025-07-06T18:05:36.836Z",
+      "sent_at": "2025-07-06T18:05:36.836Z",
+      "id": "f6738430-f246-4bf9-a2f5-3ed2307c4801"
+    },
+    {
+      "user_id": "admin",
+      "title": "🛒 New Order Received",
+      "message": "New order #ORDER_1751825136499 received from customer 2. Total: $913.00 with 3 item(s). Payment: Razorpay",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"order_id\":\"ORDER_1751825136499\",\"customer_id\":\"2\",\"order_total\":913,\"item_count\":3,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:05:36.838Z\",\"action_url\":\"/admin/orders/ORDER_1751825136499\"}",
+      "created_at": "2025-07-06T18:05:36.838Z",
+      "sent_at": "2025-07-06T18:05:36.838Z",
+      "id": "1a8967fa-27db-4aea-b9bd-1ce54b8177bc"
+    },
+    {
+      "user_id": "2",
+      "title": "Item Added to Wishlist",
+      "message": "An item has been added to your wishlist",
+      "type": "system",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T18:36:09.952Z",
+      "sent_at": "2025-07-06T18:36:09.952Z",
+      "id": "69738425-1e1d-4167-9ed4-f6ec8862e4ad"
+    },
+    {
+      "user_id": "2",
+      "title": "Order Confirmed",
+      "message": "Your order #ORDER_1751827060637 has been confirmed and is being processed.",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T18:37:40.965Z",
+      "sent_at": "2025-07-06T18:37:40.965Z",
+      "id": "6ea88da4-b2e4-4782-9f7a-088d1a86e594"
+    },
+    {
+      "user_id": "1",
+      "title": "🛒 New Order Received",
+      "message": "New order #ORDER_1751827060637 received from customer 2. Total: $735.00 with 1 item(s). Payment: Razorpay",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"order_id\":\"ORDER_1751827060637\",\"customer_id\":\"2\",\"order_total\":735,\"item_count\":1,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:37:41.065Z\",\"action_url\":\"/admin/orders/ORDER_1751827060637\"}",
+      "created_at": "2025-07-06T18:37:41.065Z",
+      "sent_at": "2025-07-06T18:37:41.065Z",
+      "id": "d8f3085e-4b00-4249-abe4-a3d7e050fd17"
+    },
+    {
+      "user_id": "admin",
+      "title": "🛒 New Order Received",
+      "message": "New order #ORDER_1751827060637 received from customer 2. Total: $735.00 with 1 item(s). Payment: Razorpay",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"order_id\":\"ORDER_1751827060637\",\"customer_id\":\"2\",\"order_total\":735,\"item_count\":1,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:37:41.066Z\",\"action_url\":\"/admin/orders/ORDER_1751827060637\"}",
+      "created_at": "2025-07-06T18:37:41.066Z",
+      "sent_at": "2025-07-06T18:37:41.066Z",
+      "id": "7c115456-5cc8-4be4-9990-d76aa559519a"
+    },
+    {
+      "user_id": "2",
+      "title": "Order Confirmed",
+      "message": "Your order #ORDER_1751827081246 has been confirmed and is being processed.",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "created_at": "2025-07-06T18:38:01.464Z",
+      "sent_at": "2025-07-06T18:38:01.464Z",
+      "id": "198890d5-e00f-44a7-9c72-6b378dffcac4"
+    },
+    {
+      "user_id": "1",
+      "title": "🛒 New Order Received",
+      "message": "New order #ORDER_1751827081246 received from customer 2. Total: $735.00 with 1 item(s). Payment: Razorpay",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"order_id\":\"ORDER_1751827081246\",\"customer_id\":\"2\",\"order_total\":735,\"item_count\":1,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:38:01.545Z\",\"action_url\":\"/admin/orders/ORDER_1751827081246\"}",
+      "created_at": "2025-07-06T18:38:01.545Z",
+      "sent_at": "2025-07-06T18:38:01.545Z",
+      "id": "b3e30978-8872-4e78-8312-abb670dc8101"
+    },
+    {
+      "user_id": "admin",
+      "title": "🛒 New Order Received",
+      "message": "New order #ORDER_1751827081246 received from customer 2. Total: $735.00 with 1 item(s). Payment: Razorpay",
+      "type": "order",
+      "channel": "in_app",
+      "status": "sent",
+      "is_read": false,
+      "metadata": "{\"order_id\":\"ORDER_1751827081246\",\"customer_id\":\"2\",\"order_total\":735,\"item_count\":1,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:38:01.546Z\",\"action_url\":\"/admin/orders/ORDER_1751827081246\"}",
+      "created_at": "2025-07-06T18:38:01.546Z",
+      "sent_at": "2025-07-06T18:38:01.546Z",
+      "id": "b27f189d-01bd-4f8a-9662-ad2e9551e31b"
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "All",
+      "description": "All products in our catalog",
+      "is_active": true
+    },
+    {
+      "id": "2",
+      "name": "Veg Pickles",
+      "description": "Vegetarian pickles made with fresh vegetables and spices",
+      "is_active": true
+    },
+    {
+      "id": "3",
+      "name": "Non Veg Pickles",
+      "description": "Non-vegetarian pickles with meat and authentic spices",
+      "is_active": true
+    },
+    {
+      "id": "4",
+      "name": "Spicy Pickles",
+      "description": "Hot and spicy pickles for spice lovers",
+      "is_active": true
+    },
+    {
+      "id": "5",
+      "name": "Sweet Pickles",
+      "description": "Sweet and tangy pickles with a mild flavor",
+      "is_active": true
+    },
+    {
+      "id": "6",
+      "name": "Gongura Pickles",
+      "description": "Traditional gongura and sorrel leaf pickles",
+      "is_active": true
+    },
+    {
+      "id": "7",
+      "name": "Chicken Pickles",
+      "description": "Spicy chicken pickles with boneless pieces",
+      "is_active": true
+    },
+    {
+      "id": "8",
+      "name": "Mutton Pickles",
+      "description": "Rich and tender mutton pickles",
+      "is_active": true
+    },
+    {
+      "id": "9",
+      "name": "Fish Pickles",
+      "description": "Coastal style fish pickles with authentic flavors",
+      "is_active": true
+    },
+    {
+      "id": "10",
+      "name": "Mixed Pickles",
+      "description": "Mixed vegetable and fruit pickles",
+      "is_active": true
+    },
+    {
+      "id": "11",
+      "name": "Seasonal Pickles",
+      "description": "Limited edition seasonal pickles",
+      "is_active": false
+    }
+  ],
+  "campaigns": [],
+  "wishlist": [
+    {
+      "user_id": "1",
+      "product_id": "9",
+      "added_date": "2025-07-06T12:39:24.073Z",
+      "id": "a956e4ae-05ea-4953-bd51-8f7a10ec4681"
+    },
+    {
+      "user_id": "1",
+      "product_id": "8",
+      "added_date": "2025-07-06T14:39:13.808Z",
+      "id": "16ee83e1-a988-4e94-92eb-87bed07dfd22"
+    },
+    {
+      "user_id": "1",
+      "product_id": "f63e56b4-d971-4022-90d3-2c2e9ab9539f",
+      "added_date": "2025-07-06T15:43:50.389Z",
+      "id": "5082c52e-992a-4c78-8813-2c599469fa08"
+    },
+    {
+      "user_id": "1",
+      "product_id": "1",
+      "added_date": "2025-07-06T15:53:41.955Z",
+      "id": "4df60fd2-ffc2-4938-942b-a4711c2ac53a"
+    },
+    {
+      "user_id": "1",
+      "product_id": "af198629-1a71-4118-b49e-a599b347628d",
+      "added_date": "2025-07-06T16:36:14.772Z",
+      "id": "fb24145f-29d8-4bd0-9ed4-8029562ca867"
+    },
+    {
+      "user_id": "2",
+      "product_id": "1",
+      "added_date": "2025-07-06T18:36:00.694Z",
+      "id": "bf03c960-8eda-4a95-9769-f412f9625535"
+    }
+  ],
+  "reviews": [
+    {
+      "id": "1",
+      "user_id": "1",
+      "product_id": "8",
+      "rating": 2,
+      "review_text": "This is a sample review for product 1.",
+      "review_date": "2025-07-01T12:25:51.940Z",
+      "verified_purchase": false
+    },
+    {
+      "id": "2",
+      "user_id": "1",
+      "product_id": "6",
+      "rating": 3,
+      "review_text": "This is a sample review for product 2.",
+      "review_date": "2025-06-30T12:25:51.940Z",
+      "verified_purchase": false
+    },
+    {
+      "id": "3",
+      "user_id": "1",
+      "product_id": "7",
+      "rating": 4,
+      "review_text": "This is a sample review for product 3.",
+      "review_date": "2025-06-15T12:25:51.940Z",
+      "verified_purchase": true
+    },
+    {
+      "id": "4",
+      "user_id": "1",
+      "product_id": "1",
+      "rating": 4,
+      "review_text": "This is a sample review for product 4.",
+      "review_date": "2025-07-03T12:25:51.940Z",
+      "verified_purchase": false
+    },
+    {
+      "id": "5",
+      "user_id": "1",
+      "product_id": "4",
+      "rating": 3,
+      "review_text": "This is a sample review for product 5.",
+      "review_date": "2025-06-22T12:25:51.940Z",
+      "verified_purchase": false
+    },
+    {
+      "id": "6",
+      "user_id": "1",
+      "product_id": "3",
+      "rating": 3,
+      "review_text": "This is a sample review for product 6.",
+      "review_date": "2025-06-15T12:25:51.940Z",
+      "verified_purchase": true
+    },
+    {
+      "id": "7",
+      "user_id": "1",
+      "product_id": "5",
+      "rating": 2,
+      "review_text": "This is a sample review for product 7.",
+      "review_date": "2025-06-08T12:25:51.940Z",
+      "verified_purchase": true
+    },
+    {
+      "id": "8",
+      "user_id": "1",
+      "product_id": "7",
+      "rating": 1,
+      "review_text": "This is a sample review for product 8.",
+      "review_date": "2025-07-05T12:25:51.940Z",
+      "verified_purchase": false
+    },
+    {
+      "id": "9",
+      "user_id": "1",
+      "product_id": "9",
+      "rating": 5,
+      "review_text": "This is a sample review for product 9.",
+      "review_date": "2025-06-11T12:25:51.940Z",
+      "verified_purchase": true
+    },
+    {
+      "id": "10",
+      "user_id": "1",
+      "product_id": "7",
+      "rating": 4,
+      "review_text": "This is a sample review for product 10.",
+      "review_date": "2025-06-21T12:25:51.940Z",
+      "verified_purchase": true
+    }
+  ],
+  "whatsapp": [
+    {
+      "id": "1",
+      "phone_number": "+19899026350",
+      "message_type": "text",
+      "message_content": "This is a sample WhatsApp message 1.",
+      "status": "sent",
+      "user_id": "1",
+      "campaign_id": "1",
+      "sent_at": "2025-07-06T12:25:51.940Z",
+      "created_at": "2025-06-22T12:25:51.940Z"
+    },
+    {
+      "id": "2",
+      "phone_number": "+11068077138",
+      "message_type": "text",
+      "message_content": "This is a sample WhatsApp message 2.",
+      "status": "failed",
+      "user_id": "1",
+      "campaign_id": "3",
+      "sent_at": "2025-06-28T12:25:51.940Z",
+      "created_at": "2025-07-05T12:25:51.940Z"
+    },
+    {
+      "id": "3",
+      "phone_number": "+15804380676",
+      "message_type": "text",
+      "message_content": "This is a sample WhatsApp message 3.",
+      "status": "read",
+      "user_id": "1",
+      "campaign_id": "3",
+      "sent_at": "2025-06-28T12:25:51.940Z",
+      "created_at": "2025-06-25T12:25:51.940Z"
+    },
+    {
+      "id": "4",
+      "phone_number": "+16971954542",
+      "message_type": "text",
+      "message_content": "This is a sample WhatsApp message 4.",
+      "status": "sent",
+      "user_id": "1",
+      "campaign_id": "2",
+      "sent_at": "2025-07-01T12:25:51.940Z",
+      "created_at": "2025-06-14T12:25:51.940Z"
+    },
+    {
+      "id": "5",
+      "phone_number": "+12926006426",
+      "message_type": "text",
+      "message_content": "This is a sample WhatsApp message 5.",
+      "status": "sent",
+      "user_id": "1",
+      "campaign_id": "2",
+      "sent_at": "2025-06-27T12:25:51.940Z",
+      "created_at": "2025-07-06T12:25:51.940Z"
+    }
+  ],
+  "banners": [
+    {
+      "id": 1,
+      "title": "Summer Sale",
+      "subtitle": "Up to 55% Off Pickles",
+      "description": "Limited time offer on premium Products",
+      "image": "https://www.amaravathipickles.com/wp-content/uploads/2019/01/chicken-pickle-in-hyderabad.png",
+      "cta": "Pickles Shop",
+      "link": "/products?category=Electronics"
+    },
+    {
+      "id": 2,
+      "title": "New Collection",
+      "subtitle": "Nati Styles Pickles",
+      "description": "Discover the latest trends in Pickles ",
+      "image": "https://5.imimg.com/data5/SELLER/Default/2022/3/QY/IR/AM/33290846/south-indian-chicken-pickle-1000x1000.jpg",
+      "cta": "Pickles Shop",
+      "link": "/products?category=Fashion"
+    },
+    {
+      "id": 3,
+      "title": "Smart Home",
+      "subtitle": "Transform Your Living Space",
+      "description": "Innovative solutions for modern homes",
+      "image": "https://m.media-amazon.com/images/I/717cb77+qUL.jpg",
+      "cta": "Shop Home & Kitchen",
+      "link": "/products?category=Home%20%26%20Kitchen"
+    }
+  ],
+  "productVariants": [],
+  "invoices": [
+    {
+      "id": "INV_1751804751941",
+      "invoice_number": "INV-20250411-001",
+      "order_id": "3",
+      "user_id": "1",
+      "invoice_date": "2025-04-11T12:25:51.940Z",
+      "due_date": "2025-05-11T12:25:51.940Z",
+      "total_amount": 53.98,
+      "tax_amount": 4,
+      "subtotal": 49.98,
+      "status": "draft",
+      "customer_info": "{\"name\":\"John Smith\",\"email\":\"john.smith@example.com\",\"phone\":\"+16134578444\",\"address\":{\"street\":\"5284 Main St\",\"city\":\"Houston\",\"state\":\"NY\",\"zip\":\"42288\"}}",
+      "items": "[{\"id\":\"INV001_1\",\"product_id\":\"PROD1\",\"product_name\":\"Mutton Pickle\",\"description\":\"Tender mutton pickle with rich flavors\",\"quantity\":2,\"unit_price\":24.99,\"total_price\":49.98}]",
+      "created_at": "2025-04-11T12:25:51.940Z",
+      "updated_at": "2025-04-11T12:25:51.940Z"
+    },
+    {
+      "id": "INV_1751804751943",
+      "invoice_number": "INV-20250703-002",
+      "order_id": "1",
+      "user_id": "1",
+      "invoice_date": "2025-07-03T12:25:51.940Z",
+      "due_date": "2025-08-02T12:25:51.940Z",
+      "total_amount": 113.34,
+      "tax_amount": 8.4,
+      "subtotal": 104.94,
+      "status": "overdue",
+      "customer_info": "{\"name\":\"Sarah Johnson\",\"email\":\"sarah.johnson@example.com\",\"phone\":\"+11689451733\",\"address\":{\"street\":\"8208 Main St\",\"city\":\"Houston\",\"state\":\"CA\",\"zip\":\"15132\"}}",
+      "items": "[{\"id\":\"INV002_1\",\"product_id\":\"PROD1\",\"product_name\":\"Lemon Pickle\",\"description\":\"Classic lemon pickle with traditional recipe\",\"quantity\":3,\"unit_price\":9.99,\"total_price\":29.97},{\"id\":\"INV002_2\",\"product_id\":\"PROD2\",\"product_name\":\"Mutton Pickle\",\"description\":\"Tender mutton pickle with rich flavors\",\"quantity\":3,\"unit_price\":24.99,\"total_price\":74.97}]",
+      "created_at": "2025-07-03T12:25:51.940Z",
+      "updated_at": "2025-07-03T12:25:51.940Z"
+    },
+    {
+      "id": "INV_1751804751944",
+      "invoice_number": "INV-20250504-003",
+      "order_id": "5",
+      "user_id": "1",
+      "invoice_date": "2025-05-04T12:25:51.941Z",
+      "due_date": "2025-06-03T12:25:51.941Z",
+      "total_amount": 42.09,
+      "tax_amount": 3.12,
+      "subtotal": 38.97,
+      "status": "draft",
+      "customer_info": "{\"name\":\"Mike Chen\",\"email\":\"mike.chen@example.com\",\"phone\":\"+16727937189\",\"address\":{\"street\":\"2269 Main St\",\"city\":\"Houston\",\"state\":\"TX\",\"zip\":\"56387\"}}",
+      "items": "[{\"id\":\"INV003_1\",\"product_id\":\"PROD1\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":3,\"unit_price\":12.99,\"total_price\":38.97}]",
+      "created_at": "2025-05-04T12:25:51.941Z",
+      "updated_at": "2025-05-04T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751945",
+      "invoice_number": "INV-20250510-004",
+      "order_id": "3",
+      "user_id": "1",
+      "invoice_date": "2025-05-10T12:25:51.941Z",
+      "due_date": "2025-06-09T12:25:51.941Z",
+      "total_amount": 82.04,
+      "tax_amount": 6.08,
+      "subtotal": 75.96,
+      "status": "sent",
+      "customer_info": "{\"name\":\"Emily Davis\",\"email\":\"emily.davis@example.com\",\"phone\":\"+16334491749\",\"address\":{\"street\":\"8268 Main St\",\"city\":\"Chicago\",\"state\":\"CA\",\"zip\":\"67575\"}}",
+      "items": "[{\"id\":\"INV004_1\",\"product_id\":\"PROD1\",\"product_name\":\"Mutton Pickle\",\"description\":\"Tender mutton pickle with rich flavors\",\"quantity\":2,\"unit_price\":24.99,\"total_price\":49.98},{\"id\":\"INV004_2\",\"product_id\":\"PROD2\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":2,\"unit_price\":12.99,\"total_price\":25.98}]",
+      "created_at": "2025-05-10T12:25:51.941Z",
+      "updated_at": "2025-05-10T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751946",
+      "invoice_number": "INV-20250625-005",
+      "order_id": "1",
+      "user_id": "1",
+      "invoice_date": "2025-06-25T12:25:51.941Z",
+      "due_date": "2025-07-25T12:25:51.941Z",
+      "total_amount": 172.69,
+      "tax_amount": 12.79,
+      "subtotal": 159.9,
+      "status": "overdue",
+      "customer_info": "{\"name\":\"David Wilson\",\"email\":\"david.wilson@example.com\",\"phone\":\"+14996082629\",\"address\":{\"street\":\"2221 Main St\",\"city\":\"Phoenix\",\"state\":\"NY\",\"zip\":\"71244\"}}",
+      "items": "[{\"id\":\"INV005_1\",\"product_id\":\"PROD1\",\"product_name\":\"Fish Pickle\",\"description\":\"Coastal style fish pickle with authentic spices\",\"quantity\":3,\"unit_price\":19.99,\"total_price\":59.97},{\"id\":\"INV005_2\",\"product_id\":\"PROD2\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":2,\"unit_price\":12.99,\"total_price\":25.98},{\"id\":\"INV005_3\",\"product_id\":\"PROD3\",\"product_name\":\"Gongura Pickle\",\"description\":\"Traditional gongura pickle with fresh sorrel leaves\",\"quantity\":2,\"unit_price\":15.99,\"total_price\":31.98},{\"id\":\"INV005_4\",\"product_id\":\"PROD4\",\"product_name\":\"Garlic Pickle\",\"description\":\"Aromatic garlic pickle with bold flavors\",\"quantity\":3,\"unit_price\":13.99,\"total_price\":41.97}]",
+      "created_at": "2025-06-25T12:25:51.941Z",
+      "updated_at": "2025-06-25T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751947",
+      "invoice_number": "INV-20250612-006",
+      "order_id": "3",
+      "user_id": "1",
+      "invoice_date": "2025-06-12T12:25:51.941Z",
+      "due_date": "2025-07-12T12:25:51.941Z",
+      "total_amount": 31.3,
+      "tax_amount": 2.32,
+      "subtotal": 28.98,
+      "status": "overdue",
+      "customer_info": "{\"name\":\"Lisa Brown\",\"email\":\"lisa.brown@example.com\",\"phone\":\"+18602509239\",\"address\":{\"street\":\"4137 Main St\",\"city\":\"New York\",\"state\":\"TX\",\"zip\":\"16161\"}}",
+      "items": "[{\"id\":\"INV006_1\",\"product_id\":\"PROD1\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":1,\"unit_price\":12.99,\"total_price\":12.99},{\"id\":\"INV006_2\",\"product_id\":\"PROD2\",\"product_name\":\"Gongura Pickle\",\"description\":\"Traditional gongura pickle with fresh sorrel leaves\",\"quantity\":1,\"unit_price\":15.99,\"total_price\":15.99}]",
+      "created_at": "2025-06-12T12:25:51.941Z",
+      "updated_at": "2025-06-12T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751948",
+      "invoice_number": "INV-20250705-007",
+      "order_id": "4",
+      "user_id": "1",
+      "invoice_date": "2025-07-05T12:25:51.941Z",
+      "due_date": "2025-08-04T12:25:51.941Z",
+      "total_amount": 168.38,
+      "tax_amount": 12.47,
+      "subtotal": 155.91,
+      "status": "draft",
+      "customer_info": "{\"name\":\"James Miller\",\"email\":\"james.miller@example.com\",\"phone\":\"+18171717758\",\"address\":{\"street\":\"6306 Main St\",\"city\":\"Phoenix\",\"state\":\"CA\",\"zip\":\"15714\"}}",
+      "items": "[{\"id\":\"INV007_1\",\"product_id\":\"PROD1\",\"product_name\":\"Mixed Vegetable Pickle\",\"description\":\"Assorted vegetables pickled to perfection\",\"quantity\":3,\"unit_price\":11.99,\"total_price\":35.97},{\"id\":\"INV007_2\",\"product_id\":\"PROD2\",\"product_name\":\"Mutton Pickle\",\"description\":\"Tender mutton pickle with rich flavors\",\"quantity\":2,\"unit_price\":24.99,\"total_price\":49.98},{\"id\":\"INV007_3\",\"product_id\":\"PROD3\",\"product_name\":\"Chicken Pickle\",\"description\":\"Boneless chicken pickle with aromatic spices\",\"quantity\":2,\"unit_price\":18.99,\"total_price\":37.98},{\"id\":\"INV007_4\",\"product_id\":\"PROD4\",\"product_name\":\"Gongura Pickle\",\"description\":\"Traditional gongura pickle with fresh sorrel leaves\",\"quantity\":2,\"unit_price\":15.99,\"total_price\":31.98}]",
+      "created_at": "2025-07-05T12:25:51.941Z",
+      "updated_at": "2025-07-05T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751949",
+      "invoice_number": "INV-20250612-008",
+      "order_id": "4",
+      "user_id": "1",
+      "invoice_date": "2025-06-12T12:25:51.941Z",
+      "due_date": "2025-07-12T12:25:51.941Z",
+      "total_amount": 132.74,
+      "tax_amount": 9.83,
+      "subtotal": 122.91,
+      "status": "draft",
+      "customer_info": "{\"name\":\"Jessica Garcia\",\"email\":\"jessica.garcia@example.com\",\"phone\":\"+12201292280\",\"address\":{\"street\":\"278 Main St\",\"city\":\"Houston\",\"state\":\"NY\",\"zip\":\"18501\"}}",
+      "items": "[{\"id\":\"INV008_1\",\"product_id\":\"PROD1\",\"product_name\":\"Mixed Vegetable Pickle\",\"description\":\"Assorted vegetables pickled to perfection\",\"quantity\":3,\"unit_price\":11.99,\"total_price\":35.97},{\"id\":\"INV008_2\",\"product_id\":\"PROD2\",\"product_name\":\"Chicken Pickle\",\"description\":\"Boneless chicken pickle with aromatic spices\",\"quantity\":3,\"unit_price\":18.99,\"total_price\":56.97},{\"id\":\"INV008_3\",\"product_id\":\"PROD3\",\"product_name\":\"Lemon Pickle\",\"description\":\"Classic lemon pickle with traditional recipe\",\"quantity\":3,\"unit_price\":9.99,\"total_price\":29.97}]",
+      "created_at": "2025-06-12T12:25:51.941Z",
+      "updated_at": "2025-06-12T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751950",
+      "invoice_number": "INV-20250626-009",
+      "order_id": "2",
+      "user_id": "1",
+      "invoice_date": "2025-06-26T12:25:51.941Z",
+      "due_date": "2025-07-26T12:25:51.941Z",
+      "total_amount": 53.96,
+      "tax_amount": 4,
+      "subtotal": 49.96,
+      "status": "cancelled",
+      "customer_info": "{\"name\":\"Robert Taylor\",\"email\":\"robert.taylor@example.com\",\"phone\":\"+19747770882\",\"address\":{\"street\":\"5666 Main St\",\"city\":\"Chicago\",\"state\":\"TX\",\"zip\":\"79503\"}}",
+      "items": "[{\"id\":\"INV009_1\",\"product_id\":\"PROD1\",\"product_name\":\"Fish Pickle\",\"description\":\"Coastal style fish pickle with authentic spices\",\"quantity\":1,\"unit_price\":19.99,\"total_price\":19.99},{\"id\":\"INV009_2\",\"product_id\":\"PROD2\",\"product_name\":\"Lemon Pickle\",\"description\":\"Classic lemon pickle with traditional recipe\",\"quantity\":1,\"unit_price\":9.99,\"total_price\":9.99},{\"id\":\"INV009_3\",\"product_id\":\"PROD3\",\"product_name\":\"Lemon Pickle\",\"description\":\"Classic lemon pickle with traditional recipe\",\"quantity\":2,\"unit_price\":9.99,\"total_price\":19.98}]",
+      "created_at": "2025-06-26T12:25:51.941Z",
+      "updated_at": "2025-06-26T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751951",
+      "invoice_number": "INV-20250509-010",
+      "order_id": "5",
+      "user_id": "1",
+      "invoice_date": "2025-05-09T12:25:51.941Z",
+      "due_date": "2025-06-08T12:25:51.941Z",
+      "total_amount": 32.38,
+      "tax_amount": 2.4,
+      "subtotal": 29.98,
+      "status": "sent",
+      "customer_info": "{\"name\":\"Amanda Lee\",\"email\":\"amanda.lee@example.com\",\"phone\":\"+15648766283\",\"address\":{\"street\":\"6868 Main St\",\"city\":\"New York\",\"state\":\"TX\",\"zip\":\"23941\"}}",
+      "items": "[{\"id\":\"INV010_1\",\"product_id\":\"PROD1\",\"product_name\":\"Lemon Pickle\",\"description\":\"Classic lemon pickle with traditional recipe\",\"quantity\":1,\"unit_price\":9.99,\"total_price\":9.99},{\"id\":\"INV010_2\",\"product_id\":\"PROD2\",\"product_name\":\"Fish Pickle\",\"description\":\"Coastal style fish pickle with authentic spices\",\"quantity\":1,\"unit_price\":19.99,\"total_price\":19.99}]",
+      "created_at": "2025-05-09T12:25:51.941Z",
+      "updated_at": "2025-05-09T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751952",
+      "invoice_number": "INV-20250526-011",
+      "order_id": "5",
+      "user_id": "1",
+      "invoice_date": "2025-05-26T12:25:51.941Z",
+      "due_date": "2025-06-25T12:25:51.941Z",
+      "total_amount": 165.14,
+      "tax_amount": 12.23,
+      "subtotal": 152.91,
+      "status": "overdue",
+      "customer_info": "{\"name\":\"Christopher Martinez\",\"email\":\"christopher.martinez@example.com\",\"phone\":\"+13255395578\",\"address\":{\"street\":\"9455 Main St\",\"city\":\"Los Angeles\",\"state\":\"CA\",\"zip\":\"11231\"}}",
+      "items": "[{\"id\":\"INV011_1\",\"product_id\":\"PROD1\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":2,\"unit_price\":12.99,\"total_price\":25.98},{\"id\":\"INV011_2\",\"product_id\":\"PROD2\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":3,\"unit_price\":12.99,\"total_price\":38.97},{\"id\":\"INV011_3\",\"product_id\":\"PROD3\",\"product_name\":\"Spicy Mango Pickle\",\"description\":\"Premium spicy mango pickle with authentic spices\",\"quantity\":1,\"unit_price\":12.99,\"total_price\":12.99},{\"id\":\"INV011_4\",\"product_id\":\"PROD4\",\"product_name\":\"Mutton Pickle\",\"description\":\"Tender mutton pickle with rich flavors\",\"quantity\":3,\"unit_price\":24.99,\"total_price\":74.97}]",
+      "created_at": "2025-05-26T12:25:51.941Z",
+      "updated_at": "2025-05-26T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751953",
+      "invoice_number": "INV-20250429-012",
+      "order_id": "2",
+      "user_id": "1",
+      "invoice_date": "2025-04-29T12:25:51.941Z",
+      "due_date": "2025-05-29T12:25:51.941Z",
+      "total_amount": 85.28,
+      "tax_amount": 6.32,
+      "subtotal": 78.96,
+      "status": "overdue",
+      "customer_info": "{\"name\":\"Rachel White\",\"email\":\"rachel.white@example.com\",\"phone\":\"+17583998344\",\"address\":{\"street\":\"4788 Main St\",\"city\":\"Los Angeles\",\"state\":\"TX\",\"zip\":\"26598\"}}",
+      "items": "[{\"id\":\"INV012_1\",\"product_id\":\"PROD1\",\"product_name\":\"Chicken Pickle\",\"description\":\"Boneless chicken pickle with aromatic spices\",\"quantity\":1,\"unit_price\":18.99,\"total_price\":18.99},{\"id\":\"INV012_2\",\"product_id\":\"PROD2\",\"product_name\":\"Fish Pickle\",\"description\":\"Coastal style fish pickle with authentic spices\",\"quantity\":2,\"unit_price\":19.99,\"total_price\":39.98},{\"id\":\"INV012_3\",\"product_id\":\"PROD3\",\"product_name\":\"Fish Pickle\",\"description\":\"Coastal style fish pickle with authentic spices\",\"quantity\":1,\"unit_price\":19.99,\"total_price\":19.99}]",
+      "created_at": "2025-04-29T12:25:51.941Z",
+      "updated_at": "2025-04-29T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751954",
+      "invoice_number": "INV-20250505-013",
+      "order_id": "4",
+      "user_id": "1",
+      "invoice_date": "2025-05-05T12:25:51.941Z",
+      "due_date": "2025-06-04T12:25:51.941Z",
+      "total_amount": 38.85,
+      "tax_amount": 2.88,
+      "subtotal": 35.97,
+      "status": "draft",
+      "customer_info": "{\"name\":\"Daniel Anderson\",\"email\":\"daniel.anderson@example.com\",\"phone\":\"+15948009379\",\"address\":{\"street\":\"8736 Main St\",\"city\":\"New York\",\"state\":\"IL\",\"zip\":\"71755\"}}",
+      "items": "[{\"id\":\"INV013_1\",\"product_id\":\"PROD1\",\"product_name\":\"Mixed Vegetable Pickle\",\"description\":\"Assorted vegetables pickled to perfection\",\"quantity\":3,\"unit_price\":11.99,\"total_price\":35.97}]",
+      "created_at": "2025-05-05T12:25:51.941Z",
+      "updated_at": "2025-05-05T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751955",
+      "invoice_number": "INV-20250615-014",
+      "order_id": "4",
+      "user_id": "1",
+      "invoice_date": "2025-06-15T12:25:51.941Z",
+      "due_date": "2025-07-15T12:25:51.941Z",
+      "total_amount": 204.02,
+      "tax_amount": 15.11,
+      "subtotal": 188.91,
+      "status": "overdue",
+      "customer_info": "{\"name\":\"Jennifer Thompson\",\"email\":\"jennifer.thompson@example.com\",\"phone\":\"+19410325904\",\"address\":{\"street\":\"3028 Main St\",\"city\":\"Chicago\",\"state\":\"AZ\",\"zip\":\"56974\"}}",
+      "items": "[{\"id\":\"INV014_1\",\"product_id\":\"PROD1\",\"product_name\":\"Fish Pickle\",\"description\":\"Coastal style fish pickle with authentic spices\",\"quantity\":3,\"unit_price\":19.99,\"total_price\":59.97},{\"id\":\"INV014_2\",\"product_id\":\"PROD2\",\"product_name\":\"Mutton Pickle\",\"description\":\"Tender mutton pickle with rich flavors\",\"quantity\":3,\"unit_price\":24.99,\"total_price\":74.97},{\"id\":\"INV014_3\",\"product_id\":\"PROD3\",\"product_name\":\"Chicken Pickle\",\"description\":\"Boneless chicken pickle with aromatic spices\",\"quantity\":2,\"unit_price\":18.99,\"total_price\":37.98},{\"id\":\"INV014_4\",\"product_id\":\"PROD4\",\"product_name\":\"Gongura Pickle\",\"description\":\"Traditional gongura pickle with fresh sorrel leaves\",\"quantity\":1,\"unit_price\":15.99,\"total_price\":15.99}]",
+      "created_at": "2025-06-15T12:25:51.941Z",
+      "updated_at": "2025-06-15T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751804751956",
+      "invoice_number": "INV-20250701-015",
+      "order_id": "2",
+      "user_id": "1",
+      "invoice_date": "2025-07-01T12:25:51.941Z",
+      "due_date": "2025-07-31T12:25:51.941Z",
+      "total_amount": 17.27,
+      "tax_amount": 1.28,
+      "subtotal": 15.99,
+      "status": "cancelled",
+      "customer_info": "{\"name\":\"Matthew Clark\",\"email\":\"matthew.clark@example.com\",\"phone\":\"+16019241462\",\"address\":{\"street\":\"1614 Main St\",\"city\":\"Chicago\",\"state\":\"CA\",\"zip\":\"11791\"}}",
+      "items": "[{\"id\":\"INV015_1\",\"product_id\":\"PROD1\",\"product_name\":\"Gongura Pickle\",\"description\":\"Traditional gongura pickle with fresh sorrel leaves\",\"quantity\":1,\"unit_price\":15.99,\"total_price\":15.99}]",
+      "created_at": "2025-07-01T12:25:51.941Z",
+      "updated_at": "2025-07-01T12:25:51.941Z"
+    },
+    {
+      "id": "INV_1751817420785",
+      "invoice_number": "INV-20250706-341",
+      "order_id": "ORDER_1751817420358",
+      "user_id": "1",
+      "invoice_date": "2025-07-06T15:57:00.784Z",
+      "due_date": "2025-08-05T15:57:00.784Z",
+      "total_amount": 214.92,
+      "tax_amount": 15.92,
+      "subtotal": 199,
+      "status": "sent",
+      "customer_info": "{\"name\":\"Customer 1\",\"email\":\"customer1@example.com\",\"phone\":\"\",\"address\":{\"fullName\":\"pulaganti Bhargava\",\"email\":\"admin@example.com\",\"address\":\"bangalore\",\"city\":\"bangalore\",\"state\":\"karanataka\",\"zipCode\":\"517390\",\"country\":\"United States\"}}",
+      "items": "[{\"id\":\"INV-20250706-341_1\",\"product_id\":\"1\",\"product_name\":\"Veg Pickle Tomato Pickle\",\"description\":\"Premium Veg Pickle Tomato Pickle\",\"quantity\":1,\"unit_price\":199,\"total_price\":199}]",
+      "created_at": "2025-07-06T15:57:00.784Z",
+      "updated_at": "2025-07-06T17:32:47.410Z"
+    },
+    {
+      "id": "INV_1751825136942",
+      "invoice_number": "INV-20250706-669",
+      "order_id": "ORDER_1751825136499",
+      "user_id": "2",
+      "invoice_date": "2025-07-06T18:05:36.942Z",
+      "due_date": "2025-08-05T18:05:36.942Z",
+      "total_amount": 986.04,
+      "tax_amount": 73.04,
+      "subtotal": 913,
+      "status": "sent",
+      "customer_info": "{\"name\":\"Customer 2\",\"email\":\"customer2@example.com\",\"phone\":\"\",\"address\":{\"fullName\":\"pulaganti Bhargava\",\"email\":\"rhagavsurya123@gmail.com\",\"address\":\"bangalore\",\"city\":\"Visakhapatnam\",\"state\":\"Andhra Pradesh\",\"zipCode\":\"517390\",\"country\":\"India\"}}",
+      "items": "[{\"id\":\"INV-20250706-669_6\",\"product_id\":\"6\",\"product_name\":\"Product 6\",\"description\":\"Premium Product 6\",\"quantity\":1,\"unit_price\":86,\"total_price\":86},{\"id\":\"INV-20250706-669_14\",\"product_id\":\"14\",\"product_name\":\"Non Veg Pickle Gongura Chicken Boneless Pickle\",\"description\":\"Premium Non Veg Pickle Gongura Chicken Boneless Pickle\",\"quantity\":1,\"unit_price\":429,\"total_price\":429},{\"id\":\"INV-20250706-669_1\",\"product_id\":\"1\",\"product_name\":\"Veg Pickle Tomato Pickle\",\"description\":\"Premium Veg Pickle Tomato Pickle\",\"quantity\":2,\"unit_price\":199,\"total_price\":398}]",
+      "created_at": "2025-07-06T18:05:36.942Z",
+      "updated_at": "2025-07-06T18:05:36.942Z"
+    },
+    {
+      "id": "INV_1751827061197",
+      "invoice_number": "INV-20250707-535",
+      "order_id": "ORDER_1751827060637",
+      "user_id": "2",
+      "invoice_date": "2025-07-06T18:37:41.197Z",
+      "due_date": "2025-08-05T18:37:41.197Z",
+      "total_amount": 793.8,
+      "tax_amount": 58.800000000000004,
+      "subtotal": 735,
+      "status": "sent",
+      "customer_info": "{\"name\":\"Customer 2\",\"email\":\"customer2@example.com\",\"phone\":\"\",\"address\":{\"fullName\":\"pulaganti Bhargava\",\"email\":\"rhagavsurya123@gmail.com\",\"address\":\"bhargav 100 \",\"city\":\"Bangalore\",\"state\":\"Karnataka\",\"zipCode\":\"517390\",\"country\":\"India\"}}",
+      "items": "[{\"id\":\"INV-20250707-535_1\",\"product_id\":\"1\",\"product_name\":\"Product 1\",\"description\":\"Premium Product 1\",\"quantity\":7,\"unit_price\":105,\"total_price\":735}]",
+      "created_at": "2025-07-06T18:37:41.197Z",
+      "updated_at": "2025-07-06T18:37:41.197Z"
+    },
+    {
+      "id": "INV_1751827081709",
+      "invoice_number": "INV-20250707-341",
+      "order_id": "ORDER_1751827081246",
+      "user_id": "2",
+      "invoice_date": "2025-07-06T18:38:01.709Z",
+      "due_date": "2025-08-05T18:38:01.709Z",
+      "total_amount": 793.8,
+      "tax_amount": 58.800000000000004,
+      "subtotal": 735,
+      "status": "sent",
+      "customer_info": "{\"name\":\"Customer 2\",\"email\":\"customer2@example.com\",\"phone\":\"\",\"address\":{\"fullName\":\"pulaganti Bhargava\",\"email\":\"rhagavsurya123@gmail.com\",\"address\":\"bhargav 100 \",\"city\":\"Bangalore\",\"state\":\"Karnataka\",\"zipCode\":\"517390\",\"country\":\"India\"}}",
+      "items": "[{\"id\":\"INV-20250707-341_1\",\"product_id\":\"1\",\"product_name\":\"Product 1\",\"description\":\"Premium Product 1\",\"quantity\":7,\"unit_price\":105,\"total_price\":735}]",
+      "created_at": "2025-07-06T18:38:01.709Z",
+      "updated_at": "2025-07-06T18:38:01.709Z"
+    }
+  ],
+  "otpCodes": [
+    {
+      "phone_number": "+919390872628",
+      "otp_code": "374882",
+      "expires_at": "2025-07-06T13:03:44.897Z",
+      "is_verified": false,
+      "attempts": 0,
+      "created_at": "2025-07-06T12:53:44.898Z",
+      "id": "965c8432-70f6-4126-a01d-12ab97e46423"
+    },
+    {
+      "phone_number": "+1234567890",
+      "otp_code": "995188",
+      "expires_at": "2025-07-06T13:07:33.944Z",
+      "is_verified": false,
+      "attempts": 0,
+      "created_at": "2025-07-06T12:57:33.944Z",
+      "id": "89310e1e-df66-4706-8eaf-b0875c648f81"
+    },
+    {
+      "phone_number": "+919390872628",
+      "otp_code": "470638",
+      "expires_at": "2025-07-06T13:08:01.112Z",
+      "is_verified": false,
+      "attempts": 0,
+      "created_at": "2025-07-06T12:58:01.112Z",
+      "id": "6707ad3a-6eee-4b2d-9648-87c6193d635e"
+    },
+    {
+      "phone_number": "+919390872628",
+      "otp_code": "653101",
+      "expires_at": "2025-07-06T16:02:25.752Z",
+      "is_verified": false,
+      "attempts": 0,
+      "created_at": "2025-07-06T15:52:25.752Z",
+      "id": "56f31836-7607-409c-8154-d5085dfb70e2"
+    },
+    {
+      "phone_number": "+919390872628",
+      "otp_code": "631229",
+      "expires_at": "2025-07-06T16:02:55.620Z",
+      "is_verified": false,
+      "attempts": 0,
+      "created_at": "2025-07-06T15:52:55.620Z",
+      "id": "b5b45aea-49a7-497e-92ae-07d86e0d1b62"
+    }
+  ],
+  "passwordResetTokens": [
+    {
+      "id": "7d366f80-2d93-4e30-a1ae-b09835915937",
+      "email": "admin@example.com",
+      "user_id": "1",
+      "token": "7d22f6bd-8f93-4787-a6c5-190b50497b3d",
+      "expires_at": "2025-07-06T15:49:38.096Z",
+      "used": false,
+      "created_at": "2025-07-06T14:49:38.096Z"
+    }
+  ]
+}
