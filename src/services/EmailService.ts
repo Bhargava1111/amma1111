@@ -41,6 +41,7 @@ export interface EmailData {
     content: Uint8Array | string;
     contentType?: string;
   }>;
+  headers?: { [key: string]: string };
 }
 
 export class EmailService {
@@ -189,6 +190,170 @@ export class EmailService {
       `
     }),
 
+    enhancedAdminOrderNotification: (orderData: any, orderItems: any[], customerInfo?: any): EmailTemplate => ({
+      subject: `🛒 New Order #${orderData.id} - $${orderData.order_total.toFixed(2)} - Immediate Action Required`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Enhanced Order Notification</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+            .container { max-width: 700px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 15px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
+            .priority-badge { background-color: #dc2626; color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+            .order-details { background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6; }
+            .customer-info { background-color: #fef3c7; padding: 15px; border-radius: 8px; margin: 15px 0; }
+            .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .items-table th, .items-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+            .items-table th { background-color: #f3f4f6; font-weight: bold; }
+            .total-section { background-color: #ecfdf5; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: right; }
+            .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 30px 0; }
+            .action-button { display: block; padding: 15px; text-align: center; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease; }
+            .primary-action { background-color: #059669; color: white; }
+            .secondary-action { background-color: #6366f1; color: white; }
+            .urgent-note { background-color: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin: 20px 0; }
+            .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 20px 0; }
+            .stat-box { background-color: #f9fafb; padding: 15px; border-radius: 8px; text-align: center; }
+            .stat-number { font-size: 24px; font-weight: bold; color: #1f2937; }
+            .stat-label { font-size: 12px; color: #6b7280; text-transform: uppercase; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="priority-badge">HIGH PRIORITY</div>
+              <h1 style="margin: 0; font-size: 28px;">🛒 New Order Received!</h1>
+              <p style="margin: 10px 0 0 0; opacity: 0.9;">Order #${orderData.id} requires immediate processing</p>
+            </div>
+
+            <div class="stats-row">
+              <div class="stat-box">
+                <div class="stat-number">$${orderData.order_total.toFixed(2)}</div>
+                <div class="stat-label">Order Value</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-number">${orderItems?.length || 0}</div>
+                <div class="stat-label">Items</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-number">${orderData.payment_method}</div>
+                <div class="stat-label">Payment</div>
+              </div>
+            </div>
+
+            <div class="order-details">
+              <h2 style="margin-top: 0; color: #1f2937;">📋 Order Details</h2>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                  <p><strong>Order ID:</strong> ${orderData.id}</p>
+                  <p><strong>Order Date:</strong> ${new Date(orderData.order_date).toLocaleString()}</p>
+                  <p><strong>Status:</strong> <span style="background-color: #fbbf24; color: #92400e; padding: 2px 8px; border-radius: 4px; font-size: 12px;">${orderData.order_status.toUpperCase()}</span></p>
+                </div>
+                <div>
+                  <p><strong>Customer ID:</strong> ${orderData.user_id}</p>
+                  <p><strong>Tracking:</strong> ${orderData.tracking_number || 'TBD'}</p>
+                  <p><strong>Estimated Delivery:</strong> ${orderData.estimated_delivery ? new Date(orderData.estimated_delivery).toLocaleDateString() : 'TBD'}</p>
+                </div>
+              </div>
+            </div>
+
+            ${customerInfo ? `
+            <div class="customer-info">
+              <h3 style="margin-top: 0; color: #92400e;">👤 Customer Information</h3>
+              <p><strong>Name:</strong> ${customerInfo.name || 'N/A'}</p>
+              <p><strong>Email:</strong> ${customerInfo.email || 'N/A'}</p>
+              <p><strong>Phone:</strong> ${customerInfo.phone || 'N/A'}</p>
+            </div>
+            ` : ''}
+
+            ${orderItems && orderItems.length > 0 ? `
+            <div style="margin: 25px 0;">
+              <h3 style="color: #1f2937;">🛍️ Order Items</h3>
+              <table class="items-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${orderItems.map(item => `
+                    <tr>
+                      <td>
+                        <strong>${item.product_name || item.name}</strong>
+                        ${item.description ? `<br><small style="color: #6b7280;">${item.description}</small>` : ''}
+                      </td>
+                      <td>${item.quantity}</td>
+                      <td>$${(item.product_price || item.price).toFixed(2)}</td>
+                      <td><strong>$${((item.product_price || item.price) * item.quantity).toFixed(2)}</strong></td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            ` : ''}
+
+            <div class="total-section">
+              <h3 style="margin: 0; color: #065f46;">💰 Order Total: $${orderData.order_total.toFixed(2)}</h3>
+            </div>
+
+            <div class="urgent-note">
+              <h4 style="margin-top: 0; color: #dc2626;">⚠️ Action Required</h4>
+              <p style="margin-bottom: 0; color: #7f1d1d;">This order requires immediate attention. Please process within the next 2 hours to maintain our service level agreement.</p>
+            </div>
+
+            <div class="action-grid">
+              <a href="/admin/orders/${orderData.id}" class="action-button primary-action">
+                📋 Process Order Now
+              </a>
+              <a href="/admin/orders" class="action-button secondary-action">
+                📊 View All Orders
+              </a>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #f9fafb; border-radius: 8px;">
+              <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                📧 This is an automated notification from MANAfoods Order Management System<br>
+                🕐 Received at ${new Date().toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+🛒 NEW ORDER ALERT - HIGH PRIORITY
+
+Order Details:
+- Order ID: ${orderData.id}
+- Total: $${orderData.order_total.toFixed(2)}
+- Items: ${orderItems?.length || 0}
+- Customer: ${orderData.user_id}
+- Payment: ${orderData.payment_method}
+- Date: ${new Date(orderData.order_date).toLocaleString()}
+- Status: ${orderData.order_status}
+${customerInfo ? `
+Customer Info:
+- Name: ${customerInfo.name || 'N/A'}
+- Email: ${customerInfo.email || 'N/A'}
+- Phone: ${customerInfo.phone || 'N/A'}` : ''}
+${orderItems && orderItems.length > 0 ? `
+Order Items:
+${orderItems.map(item => `- ${item.product_name || item.name} (${item.quantity}x) - $${((item.product_price || item.price) * item.quantity).toFixed(2)}`).join('\n')}` : ''}
+
+⚠️ ACTION REQUIRED
+This order requires immediate attention. Please process within the next 2 hours.
+
+📧 MANAfoods Order Management System
+🕐 ${new Date().toLocaleString()}
+      `
+    }),
+
     invoiceEmail: (invoiceData: any): EmailTemplate => ({
       subject: `Invoice #${invoiceData.invoice_number} - MANAfoods`,
       html: `
@@ -307,18 +472,148 @@ export class EmailService {
     });
   }
 
-  // Send admin order notification
+  // Send admin order notification with enhanced error handling and retry logic
   static async sendAdminOrderNotification(orderData: any, adminEmails?: string[]): Promise<{ success: boolean; error?: string }> {
     const template = this.templates.adminOrderNotification(orderData);
     
     // Use provided admin emails or default to configured admin emails
     const emailsToSend = adminEmails || ADMIN_EMAIL_CONFIG.ADMIN_EMAILS;
     
+    console.log('EmailService: Sending admin order notification to:', emailsToSend);
+    
+    // Try sending with retry logic
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    while (attempts < maxAttempts) {
+      attempts++;
+      console.log(`EmailService: Admin order notification attempt ${attempts}/${maxAttempts}`);
+      
+      const result = await this.sendEmail({
+        to: emailsToSend,
+        subject: template.subject,
+        html: template.html,
+        text: template.text,
+        // Add high priority for admin notifications
+        headers: {
+          'X-Priority': '1',
+          'X-MSMail-Priority': 'High',
+          'Importance': 'high'
+        }
+      });
+      
+      if (result.success) {
+        console.log('EmailService: Admin order notification sent successfully');
+        return result;
+      }
+      
+      console.error(`EmailService: Admin order notification attempt ${attempts} failed:`, result.error);
+      
+      // If not the last attempt, wait before retrying
+      if (attempts < maxAttempts) {
+        console.log('EmailService: Waiting 2 seconds before retry...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
+    return {
+      success: false,
+      error: `Failed to send admin order notification after ${maxAttempts} attempts`
+    };
+  }
+
+  // Send enhanced admin order notification with order details
+  static async sendEnhancedAdminOrderNotification(orderData: any, orderItems: any[], customerInfo?: any): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log('EmailService: Sending enhanced admin order notification');
+      
+      const template = this.templates.enhancedAdminOrderNotification(orderData, orderItems, customerInfo);
+      
+      return this.sendAdminOrderNotification(orderData, ADMIN_EMAIL_CONFIG.ADMIN_EMAILS);
+    } catch (error) {
+      console.error('EmailService: Error in enhanced admin order notification:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error in enhanced notification'
+      };
+    }
+  }
+
+  // Send urgent admin notification (for high-value orders or issues)
+  static async sendUrgentAdminNotification(orderData: any, reason: string): Promise<{ success: boolean; error?: string }> {
+    const urgentTemplate = {
+      subject: `🚨 URGENT: ${reason} - Order #${orderData.id}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Urgent Order Notification</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+            .urgent-alert { background-color: #fee2e2; border: 2px solid #fecaca; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+            .urgent-title { color: #dc2626; font-size: 24px; font-weight: bold; margin: 0; }
+            .order-summary { background-color: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f59e0b; }
+            .action-buttons { text-align: center; margin: 30px 0; }
+            .button { display: inline-block; padding: 15px 30px; background-color: #dc2626; color: white; text-decoration: none; border-radius: 6px; margin: 0 10px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="urgent-alert">
+              <h1 class="urgent-title">🚨 URGENT ATTENTION REQUIRED</h1>
+              <p style="color: #dc2626; font-size: 16px; margin: 10px 0 0 0;"><strong>Reason:</strong> ${reason}</p>
+            </div>
+            
+            <div class="order-summary">
+              <h2 style="color: #92400e; margin-top: 0;">Order Details</h2>
+              <p><strong>Order ID:</strong> ${orderData.id}</p>
+              <p><strong>Customer ID:</strong> ${orderData.user_id}</p>
+              <p><strong>Order Total:</strong> $${orderData.order_total?.toFixed(2) || '0.00'}</p>
+              <p><strong>Payment Method:</strong> ${orderData.payment_method}</p>
+              <p><strong>Order Date:</strong> ${new Date(orderData.order_date).toLocaleString()}</p>
+              <p><strong>Status:</strong> ${orderData.order_status}</p>
+            </div>
+
+            <div class="action-buttons">
+              <a href="#" class="button">Review Order Immediately</a>
+              <a href="#" class="button" style="background-color: #1f2937;">Contact Customer</a>
+            </div>
+
+            <p style="text-align: center; color: #dc2626; font-weight: bold; margin-top: 30px;">
+              ⚠️ This order requires immediate attention. Please take action promptly.
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+URGENT ATTENTION REQUIRED!
+
+Reason: ${reason}
+
+Order ID: ${orderData.id}
+Customer ID: ${orderData.user_id}
+Total: $${orderData.order_total?.toFixed(2) || '0.00'}
+Payment: ${orderData.payment_method}
+Date: ${new Date(orderData.order_date).toLocaleString()}
+
+This order requires immediate attention. Please take action promptly.
+      `
+    };
+
     return this.sendEmail({
-      to: emailsToSend,
-      subject: template.subject,
-      html: template.html,
-      text: template.text
+      to: ADMIN_EMAIL_CONFIG.ADMIN_EMAILS,
+      subject: urgentTemplate.subject,
+      html: urgentTemplate.html,
+      text: urgentTemplate.text,
+      // Highest priority for urgent notifications
+      headers: {
+        'X-Priority': '1',
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high'
+      }
     });
   }
 

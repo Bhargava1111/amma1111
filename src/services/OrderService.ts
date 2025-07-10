@@ -1,6 +1,7 @@
 import { CartItem } from '../contexts/CartContext';
 import { EmailService } from './EmailService';
 import { InvoiceService } from './InvoiceService';
+import { WhatsAppService } from './WhatsAppService';
 
 const ORDERS_TABLE_ID = '10401';
 const ORDER_ITEMS_TABLE_ID = 'order_items';
@@ -133,39 +134,104 @@ export class OrderService {
         console.error('OrderService: Error creating order notification:', notifError);
       }
 
-      // Create notifications for all admin users when user places order
-      console.log(`OrderService: Creating admin notifications for new order in table ${NOTIFICATIONS_TABLE_ID}`);
+      // Create enhanced notifications for all admin users using NotificationService
+      console.log(`OrderService: Creating enhanced admin notifications for new order`);
       
-      const notificationPromises = ADMIN_CONFIG.ADMIN_USER_IDS.map(async (adminUserId) => {
-        try {
-          await window.ezsite.apis.tableCreate(NOTIFICATIONS_TABLE_ID, {
-            user_id: adminUserId,
-            title: '🛒 New Order Received',
-            message: `New order #${createdOrder.id} received from customer ${userId}. Total: $${orderTotal.toFixed(2)} with ${cartItems.length} item(s). Payment: ${paymentMethod}`,
-            type: 'order',
-            channel: 'in_app',
-            status: 'sent',
-            is_read: false,
-            metadata: JSON.stringify({
-              order_id: createdOrder.id,
-              customer_id: userId,
-              order_total: orderTotal,
-              item_count: cartItems.length,
-              payment_method: paymentMethod,
-              order_date: new Date().toISOString(),
-              action_url: `/admin/orders/${createdOrder.id}`
-            }),
-            created_at: new Date().toISOString(),
-            sent_at: new Date().toISOString()
+      try {
+        // Import NotificationService dynamically to avoid circular imports
+        const { NotificationService } = await import('./NotificationService');
+        
+        const priority = orderTotal >= 100 ? 'high' : 'normal';
+        const adminNotificationResult = await NotificationService.createOrderNotificationForAdmins(
+          {
+            id: createdOrder.id,
+            user_id: userId,
+            order_total: orderTotal,
+            payment_method: paymentMethod,
+            order_date: new Date().toISOString(),
+            order_status: 'pending',
+            tracking_number: orderDataWithId.tracking_number,
+            item_count: cartItems.length
+          },
+          ADMIN_CONFIG.ADMIN_USER_IDS
+        );
+        
+        if (adminNotificationResult.success) {
+          console.log('OrderService: Enhanced admin notifications created successfully');
+        } else {
+          console.error('OrderService: Failed to create enhanced admin notifications:', adminNotificationResult.error);
+          
+          // Fallback to manual notification creation
+          console.log('OrderService: Attempting fallback notification creation...');
+          const fallbackPromises = ADMIN_CONFIG.ADMIN_USER_IDS.map(async (adminUserId) => {
+            try {
+              await window.ezsite.apis.tableCreate(NOTIFICATIONS_TABLE_ID, {
+                user_id: adminUserId,
+                title: '🛒 New Order Received',
+                message: `New order #${createdOrder.id} received from customer ${userId}. Total: $${orderTotal.toFixed(2)} with ${cartItems.length} item(s). Payment: ${paymentMethod}`,
+                type: 'order',
+                channel: 'in_app',
+                status: 'sent',
+                is_read: false,
+                priority: priority,
+                metadata: JSON.stringify({
+                  order_id: createdOrder.id,
+                  customer_id: userId,
+                  order_total: orderTotal,
+                  item_count: cartItems.length,
+                  payment_method: paymentMethod,
+                  order_date: new Date().toISOString(),
+                  actionUrl: `/admin/orders/${createdOrder.id}`,
+                  priority: priority
+                }),
+                created_at: new Date().toISOString(),
+                sent_at: new Date().toISOString()
+              });
+              console.log(`OrderService: Fallback notification created for admin ${adminUserId}`);
+            } catch (adminNotifError) {
+              console.error(`OrderService: Error creating fallback notification for admin ${adminUserId}:`, adminNotifError);
+            }
           });
-          console.log(`OrderService: Admin notification created for user ${adminUserId}`);
-        } catch (adminNotifError) {
-          console.error(`OrderService: Error creating admin notification for user ${adminUserId}:`, adminNotifError);
+          
+          await Promise.allSettled(fallbackPromises);
         }
-      });
-
-      await Promise.allSettled(notificationPromises);
-      console.log('OrderService: All admin notifications processed.');
+      } catch (importError) {
+        console.error('OrderService: Error importing NotificationService, using fallback:', importError);
+        
+        // Direct fallback notification creation
+        const directFallbackPromises = ADMIN_CONFIG.ADMIN_USER_IDS.map(async (adminUserId) => {
+          try {
+            await window.ezsite.apis.tableCreate(NOTIFICATIONS_TABLE_ID, {
+              user_id: adminUserId,
+              title: '🛒 New Order Received',
+              message: `New order #${createdOrder.id} received from customer ${userId}. Total: $${orderTotal.toFixed(2)} with ${cartItems.length} item(s). Payment: ${paymentMethod}`,
+              type: 'order',
+              channel: 'in_app',
+              status: 'sent',
+              is_read: false,
+              priority: orderTotal >= 100 ? 'high' : 'normal',
+              metadata: JSON.stringify({
+                order_id: createdOrder.id,
+                customer_id: userId,
+                order_total: orderTotal,
+                item_count: cartItems.length,
+                payment_method: paymentMethod,
+                order_date: new Date().toISOString(),
+                actionUrl: `/admin/orders/${createdOrder.id}`
+              }),
+              created_at: new Date().toISOString(),
+              sent_at: new Date().toISOString()
+            });
+            console.log(`OrderService: Direct fallback notification created for admin ${adminUserId}`);
+          } catch (adminNotifError) {
+            console.error(`OrderService: Error creating direct fallback notification for admin ${adminUserId}:`, adminNotifError);
+          }
+        });
+        
+        await Promise.allSettled(directFallbackPromises);
+      }
+      
+      console.log('OrderService: Admin notification process completed.');
 
       // Generate invoice and send email notifications
       console.log(`OrderService: Generating invoice and sending email notifications for order ${createdOrder.id}`);
@@ -215,14 +281,76 @@ export class OrderService {
           console.error('OrderService: Failed to send invoice email:', invoiceEmailResult.error);
         }
 
-        // Send admin notification email
-        const adminEmails = ['admin@manaeats.com', 'orders@manaeats.com'];
-        const adminEmailResult = await EmailService.sendAdminOrderNotification(orderWithItems, adminEmails);
+        // Send WhatsApp notifications
+        console.log('OrderService: Sending WhatsApp notifications');
+        try {
+          // Get customer phone number (you might need to get this from user profile)
+          const customerPhone = shippingAddress?.phone || shippingAddress?.phoneNumber || '+919390872628'; // Default for demo
+          
+          // Send order confirmation via WhatsApp
+          const whatsappOrderResult = await WhatsAppService.sendOrderConfirmation(orderWithItems, customerPhone);
+          if (whatsappOrderResult.success) {
+            console.log('OrderService: WhatsApp order confirmation sent successfully');
+          } else {
+            console.error('OrderService: Failed to send WhatsApp order confirmation:', whatsappOrderResult.error);
+          }
+
+          // Send invoice notification via WhatsApp
+          const whatsappInvoiceResult = await WhatsAppService.sendInvoiceNotification(invoice, customerPhone);
+          if (whatsappInvoiceResult.success) {
+            console.log('OrderService: WhatsApp invoice notification sent successfully');
+          } else {
+            console.error('OrderService: Failed to send WhatsApp invoice notification:', whatsappInvoiceResult.error);
+          }
+        } catch (whatsappError) {
+          console.error('OrderService: WhatsApp notification error:', whatsappError);
+        }
+
+        // Send enhanced admin notification email with retry logic
+        const adminEmails = ADMIN_CONFIG.ADMIN_EMAILS;
+        console.log('OrderService: Attempting to send enhanced admin notification email to:', adminEmails);
+        
+        const adminEmailResult = await EmailService.sendEnhancedAdminOrderNotification(
+          orderWithItems, 
+          cartItems.map(item => ({
+            product_id: item.id,
+            product_name: item.name,
+            product_price: item.price,
+            quantity: item.quantity,
+            product_image: item.image
+          })), 
+          customerInfo
+        );
         
         if (adminEmailResult.success) {
-          console.log('OrderService: Admin notification email sent successfully');
+          console.log('OrderService: Enhanced admin notification email sent successfully');
         } else {
-          console.error('OrderService: Failed to send admin notification email:', adminEmailResult.error);
+          console.error('OrderService: Failed to send enhanced admin notification email:', adminEmailResult.error);
+          
+          // Fallback to basic admin notification if enhanced fails
+          console.log('OrderService: Attempting fallback admin notification...');
+          const fallbackResult = await EmailService.sendAdminOrderNotification(orderWithItems, adminEmails);
+          
+          if (fallbackResult.success) {
+            console.log('OrderService: Fallback admin notification sent successfully');
+          } else {
+            console.error('OrderService: Fallback admin notification also failed:', fallbackResult.error);
+          }
+        }
+        
+        // Check if this is a high-value order that needs urgent attention
+        if (orderTotal >= 100) { // Orders over $100 get urgent notification
+          console.log('OrderService: High-value order detected, sending urgent notification');
+          const urgentResult = await EmailService.sendUrgentAdminNotification(
+            orderWithItems, 
+            `High-value order ($${orderTotal.toFixed(2)})`
+          );
+          
+          if (urgentResult.success) {
+            console.log('OrderService: Urgent admin notification sent successfully');
+          } else {
+            console.error('OrderService: Failed to send urgent admin notification:', urgentResult.error);
+          }
         }
 
         // Update order with invoice reference
@@ -528,6 +656,9 @@ export class OrderService {
       console.log(`OrderService: New status: ${newStatus}, Tracking: ${trackingNumber}`);
       console.log(`OrderService: Delivery partner: ${deliveryPartnerName}, Link: ${deliveryPartnerLink}`);
       
+      // Get current order details for notifications
+      const { order, items } = await this.getOrderById(orderId);
+      
       // Use the correct table ID for orders
       const ORDERS_TABLE_ID = '10401';
       const updateData: any = {
@@ -557,6 +688,110 @@ export class OrderService {
       }
       
       console.log(`OrderService: Order ${orderId} updated successfully`);
+
+      // Send status update notifications
+      try {
+        console.log('OrderService: Sending status update notifications');
+        
+        // Update order object with new status
+        const updatedOrder = {
+          ...order,
+          order_status: newStatus,
+          tracking_number: trackingNumber,
+          delivery_partner_name: deliveryPartnerName,
+          delivery_partner_link: deliveryPartnerLink,
+          items: items
+        };
+
+        // Get customer info for notifications
+        const shippingAddress = typeof order.shipping_address === 'string' 
+          ? JSON.parse(order.shipping_address) 
+          : order.shipping_address;
+        
+        const customerPhone = shippingAddress?.phone || shippingAddress?.phoneNumber || '+919390872628';
+        const customerEmail = shippingAddress?.email || `customer${order.user_id}@example.com`;
+
+        // Send WhatsApp status update
+        try {
+          const whatsappResult = await WhatsAppService.sendOrderStatusUpdate(updatedOrder, customerPhone, newStatus);
+          if (whatsappResult.success) {
+            console.log('OrderService: WhatsApp status update sent successfully');
+          } else {
+            console.error('OrderService: Failed to send WhatsApp status update:', whatsappResult.error);
+          }
+        } catch (whatsappError) {
+          console.error('OrderService: WhatsApp status update error:', whatsappError);
+        }
+
+        // Send email status update
+        try {
+          const emailTemplate = {
+            subject: `Order Status Update - ${newStatus.toUpperCase()} - MANAfoods`,
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h1>Order Status Update</h1>
+                <p>Your order status has been updated!</p>
+                
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                  <h2>Order Details</h2>
+                  <p><strong>Order ID:</strong> ${orderId}</p>
+                  <p><strong>New Status:</strong> ${newStatus.toUpperCase()}</p>
+                  <p><strong>Tracking Number:</strong> ${trackingNumber}</p>
+                  ${deliveryPartnerName ? `<p><strong>Delivery Partner:</strong> ${deliveryPartnerName}</p>` : ''}
+                  ${deliveryPartnerLink ? `<p><strong>Track Shipment:</strong> <a href="${deliveryPartnerLink}">${deliveryPartnerLink}</a></p>` : ''}
+                </div>
+                
+                <p>Thank you for choosing MANAfoods!</p>
+              </div>
+            `,
+            text: `Order Status Update\n\nYour order ${orderId} status has been updated to: ${newStatus.toUpperCase()}\n\nTracking: ${trackingNumber}\n\nThank you for choosing MANAfoods!`
+          };
+
+          const emailResult = await EmailService.sendEmail({
+            to: customerEmail,
+            subject: emailTemplate.subject,
+            html: emailTemplate.html,
+            text: emailTemplate.text
+          });
+
+          if (emailResult.success) {
+            console.log('OrderService: Email status update sent successfully');
+          } else {
+            console.error('OrderService: Failed to send email status update:', emailResult.error);
+          }
+        } catch (emailError) {
+          console.error('OrderService: Email status update error:', emailError);
+        }
+
+        // Create notification for user
+        try {
+          await window.ezsite.apis.tableCreate(NOTIFICATIONS_TABLE_ID, {
+            user_id: order.user_id,
+            title: 'Order Status Updated',
+            message: `Your order #${orderId} status has been updated to ${newStatus.toUpperCase()}`,
+            type: 'order',
+            channel: 'in_app',
+            status: 'sent',
+            is_read: false,
+            metadata: JSON.stringify({
+              order_id: orderId,
+              old_status: order.order_status,
+              new_status: newStatus,
+              tracking_number: trackingNumber,
+              delivery_partner_name: deliveryPartnerName,
+              delivery_partner_link: deliveryPartnerLink
+            }),
+            created_at: new Date().toISOString(),
+            sent_at: new Date().toISOString()
+          });
+          console.log('OrderService: In-app notification created successfully');
+        } catch (notifError) {
+          console.error('OrderService: Error creating in-app notification:', notifError);
+        }
+      } catch (notificationError) {
+        console.error('OrderService: Error sending status update notifications:', notificationError);
+      }
+      
       return response;
     } catch (error) {
       console.error('Error updating order status:', error);

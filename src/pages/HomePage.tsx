@@ -20,11 +20,47 @@ import {
   Headphones as HeadphonesIcon } from
 'lucide-react';
 
+// Mock banners for fallback/testing
+const mockBanners = [
+  {
+    id: '1',
+    title: 'Premium Pickles Collection',
+    subtitle: 'Authentic Homemade Flavors',
+    description: 'Discover our traditional pickles made with fresh ingredients and time-honored recipes.',
+    image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1200&h=600&fit=crop&auto=format',
+    link: '/products?category=pickles',
+    cta: 'Shop Now'
+  },
+  {
+    id: '2',
+    title: 'Fresh & Organic',
+    subtitle: 'Farm to Table Quality',
+    description: 'Experience the taste of nature with our organic, preservative-free pickle varieties.',
+    image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=1200&h=600&fit=crop&auto=format',
+    link: '/products?category=organic',
+    cta: 'Explore'
+  },
+  {
+    id: '3',
+    title: 'Special Offers',
+    subtitle: 'Up to 30% Off',
+    description: 'Limited time deals on your favorite pickle varieties. Stock up and save big!',
+    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=600&fit=crop&auto=format',
+    link: '/products?sale=true',
+    cta: 'Save Now'
+  }
+];
+
 const HomePage: React.FC = () => {
 console.log('HomePage component rendered');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   const [featuredProducts, setFeaturedProducts] = useState(mockProducts().slice(0, 6));
   const [topRatedProducts, setTopRatedProducts] = useState(mockProducts().slice(0, 6));
@@ -46,6 +82,38 @@ console.log('HomePage component rendered');
     loadProducts();
   }, []);
 
+  // Smooth slide navigation functions
+  const nextSlide = () => {
+    if (isTransitioning || banners.length <= 1) return;
+    
+    setIsTransitioning(true);
+    setCurrentSlide((prevSlide) => 
+      prevSlide === banners.length - 1 ? 0 : prevSlide + 1
+    );
+    
+    setTimeout(() => setIsTransitioning(false), 600); // Match CSS transition duration
+  };
+
+  const prevSlide = () => {
+    if (isTransitioning || banners.length <= 1) return;
+    
+    setIsTransitioning(true);
+    setCurrentSlide((prevSlide) => 
+      prevSlide === 0 ? banners.length - 1 : prevSlide - 1
+    );
+    
+    setTimeout(() => setIsTransitioning(false), 600);
+  };
+
+  const goToSlide = (index: number) => {
+    if (isTransitioning || index === currentSlide || banners.length <= 1) return;
+    
+    setIsTransitioning(true);
+    setCurrentSlide(index);
+    
+    setTimeout(() => setIsTransitioning(false), 600);
+  };
+
   useEffect(() => {
     // Fetch banners from backend
     const fetchBanners = async () => {
@@ -53,10 +121,13 @@ console.log('HomePage component rendered');
       try {
         const res = await fetch('/api/banners');
         const json = await res.json();
-        if (json.success) setBanners(json.data);
-        else setBanners([]);
+        if (json.success && json.data?.length > 0) {
+          setBanners(json.data);
+        } else {
+          setBanners(mockBanners); // Use mock banners as fallback
+        }
       } catch (e) {
-        setBanners([]);
+        setBanners(mockBanners); // Use mock banners on error
       } finally {
         setBannersLoading(false);
       }
@@ -64,14 +135,12 @@ console.log('HomePage component rendered');
     fetchBanners();
   }, []);
 
-  // Auto scroll functionality
+  // Auto scroll functionality with smooth transitions
   useEffect(() => {
-    if (isAutoPlaying) {
+    if (isAutoPlaying && banners.length > 1 && !isTransitioning) {
       intervalRef.current = setInterval(() => {
-        setCurrentSlide((prevSlide) =>
-        prevSlide === banners.length - 1 ? 0 : prevSlide + 1
-        );
-      }, 2500); // Change slide every 4 seconds
+        nextSlide();
+      }, 4000); // Change slide every 4 seconds
     }
 
     return () => {
@@ -79,7 +148,78 @@ console.log('HomePage component rendered');
         clearInterval(intervalRef.current);
       }
     };
-  }, [isAutoPlaying, banners.length]);
+  }, [isAutoPlaying, banners.length, isTransitioning, nextSlide]);
+
+  // Touch event handlers for mobile swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsDragging(true);
+    setIsAutoPlaying(false);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+
+    setIsDragging(false);
+    setTouchStart(0);
+    setTouchEnd(0);
+    
+    // Resume auto-play after a delay
+    setTimeout(() => setIsAutoPlaying(true), 3000);
+  };
+
+  // Mouse drag handlers for desktop
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setTouchStart(e.clientX);
+    setIsDragging(true);
+    setIsAutoPlaying(false);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setTouchEnd(e.clientX);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    
+    if (!touchStart || !touchEnd) {
+      setIsDragging(false);
+      return;
+    }
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      nextSlide();
+    } else if (isRightSwipe) {
+      prevSlide();
+    }
+
+    setIsDragging(false);
+    setTouchStart(0);
+    setTouchEnd(0);
+    
+    // Resume auto-play after a delay
+    setTimeout(() => setIsAutoPlaying(true), 3000);
+  };
 
   const handleSlideChange = (index: number) => {
     setCurrentSlide(index);
@@ -139,100 +279,133 @@ console.log('HomePage component rendered');
 
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
       {/* Banner Carousel */}
-      <section className='relative'>
+      <section className='relative px-2 sm:px-4 lg:px-6'>
         <div
           className='w-full relative'
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}>
 
-          <div className='relative h-64 sm:h-80 md:h-96 lg:h-[500px] overflow-hidden'>
+          <div 
+            className='relative h-48 sm:h-64 md:h-80 lg:h-96 xl:h-[500px] overflow-hidden rounded-2xl sm:rounded-3xl shadow-2xl mx-auto max-w-7xl'
+            ref={carouselRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+          >
             <div
-              className='flex transition-transform duration-500 ease-in-out h-full'
-              style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
-
-              {banners.map((banner) =>
-              <div key={banner.id} className='w-full h-full flex-shrink-0 relative'>
+              className={`flex h-full transition-all duration-700 ease-[cubic-bezier(0.25,0.46,0.45,0.94)] ${
+                isTransitioning ? 'pointer-events-none' : ''
+              }`}
+              style={{ 
+                transform: `translateX(-${currentSlide * 100}%)`,
+                willChange: 'transform'
+              }}
+            >
+              {banners.map((banner, index) => (
+                <div 
+                  key={banner.id} 
+                  className={`w-full h-full flex-shrink-0 relative transition-opacity duration-700 ${
+                    index === currentSlide ? 'opacity-100' : 'opacity-90'
+                  }`}
+                >
                   <img
-                  src={banner.image}
-                  alt={banner.title}
-                  className='w-full h-full object-cover' />
-
-                  <div className='absolute inset-0 bg-gradient-to-r from-black/70 to-black/30 flex items-center'>
-                    <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-white w-full'>
-                      <div className='max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl'>
-                        <h1 className='text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold mb-2 sm:mb-4 leading-tight'>
+                    src={banner.image}
+                    alt={banner.title}
+                    className='w-full h-full object-cover transition-transform duration-700 hover:scale-105'
+                    draggable={false}
+                  />
+                  <div className='absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent flex items-center'>
+                    <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 text-white w-full'>
+                      <div className={`max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl transition-all duration-1000 delay-300 ${
+                        index === currentSlide 
+                          ? 'translate-x-0 opacity-100' 
+                          : 'translate-x-8 opacity-0'
+                      }`}>
+                        <h1 className='text-xl sm:text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-1 sm:mb-2 md:mb-4 leading-tight drop-shadow-lg'>
                           {banner.title}
                         </h1>
-                        <h2 className='text-lg sm:text-xl md:text-2xl lg:text-3xl mb-2 sm:mb-4 text-blue-200'>
+                        <h2 className='text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl mb-1 sm:mb-2 md:mb-4 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent drop-shadow-md'>
                           {banner.subtitle}
                         </h2>
-                        <p className='text-sm sm:text-base md:text-lg lg:text-xl mb-4 sm:mb-6 lg:mb-8 text-gray-200 leading-relaxed'>
+                        <p className='text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl mb-3 sm:mb-4 md:mb-6 lg:mb-8 text-gray-200 leading-relaxed drop-shadow-sm'>
                           {banner.description}
                         </p>
-                        <Button size='sm' asChild className='bg-blue-600 hover:bg-blue-700 text-sm sm:text-base lg:size-lg'>
-                          <Link to={banner.link}>
+                        <Button 
+                          size='sm' 
+                          asChild 
+                          className='bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-xs sm:text-sm md:text-base lg:text-lg px-4 py-2 sm:px-6 sm:py-3 transform hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl rounded-full'
+                        >
+                          <Link to={banner.link} className="group">
                             {banner.cta}
-                            <ArrowRight className='ml-2 w-4 h-4 sm:w-5 sm:h-5' />
+                            <ArrowRight className='ml-1 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-1' />
                           </Link>
                         </Button>
                       </div>
                     </div>
                   </div>
                 </div>
-              )}
+              ))}
             </div>
             
             {/* Navigation arrows */}
             <button
-              onClick={() => handleSlideChange(currentSlide === 0 ? banners.length - 1 : currentSlide - 1)}
-              className='absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full transition-all duration-200 z-10'>
-
-              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              onClick={prevSlide}
+              disabled={isTransitioning}
+              className='absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 sm:p-3 rounded-full transition-all duration-300 z-10 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg backdrop-blur-sm'
+            >
+              <svg className='w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 19l-7-7 7-7' />
               </svg>
             </button>
             <button
-              onClick={() => handleSlideChange(currentSlide === banners.length - 1 ? 0 : currentSlide + 1)}
-              className='absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full transition-all duration-200 z-10'>
-
-              <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              onClick={nextSlide}
+              disabled={isTransitioning}
+              className='absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 sm:p-3 rounded-full transition-all duration-300 z-10 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg backdrop-blur-sm'
+            >
+              <svg className='w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                 <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 5l7 7-7 7' />
               </svg>
             </button>
             
             {/* Slide indicators */}
-            <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2'>
-              {banners.map((_, index) =>
-              <button
-                key={index}
-                onClick={() => handleSlideChange(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                index === currentSlide ?
-                'bg-white' :
-                'bg-white/50 hover:bg-white/75'}`
-                } />
-
-              )}
+            <div className='absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 sm:space-x-3'>
+              {banners.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  disabled={isTransitioning}
+                  className={`transition-all duration-300 rounded-full backdrop-blur-sm ${
+                    index === currentSlide
+                      ? 'w-6 sm:w-8 h-2 sm:h-3 bg-white shadow-lg'
+                      : 'w-2 sm:w-3 h-2 sm:h-3 bg-white/60 hover:bg-white/80 hover:scale-125'
+                  } disabled:cursor-not-allowed`}
+                />
+              ))}
             </div>
             
             {/* Auto-play indicator */}
-            <div className='absolute top-4 right-4 z-10'>
+            <div className='absolute top-2 sm:top-4 right-2 sm:right-4 z-10'>
               <button
                 onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-                className='bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all duration-200'
-                title={isAutoPlaying ? 'Pause auto-scroll' : 'Resume auto-scroll'}>
-
-                {isAutoPlaying ?
-                <svg className='w-4 h-4' fill='currentColor' viewBox='0 0 24 24'>
+                className='bg-gradient-to-r from-black/60 to-black/40 hover:from-black/80 hover:to-black/60 text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg backdrop-blur-sm'
+                title={isAutoPlaying ? 'Pause auto-scroll' : 'Resume auto-scroll'}
+              >
+                {isAutoPlaying ? (
+                  <svg className='w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5' fill='currentColor' viewBox='0 0 24 24'>
                     <path d='M6 4h4v16H6V4zm8 0h4v16h-4V4z' />
-                  </svg> :
-
-                <svg className='w-4 h-4' fill='currentColor' viewBox='0 0 24 24'>
+                  </svg>
+                ) : (
+                  <svg className='w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5' fill='currentColor' viewBox='0 0 24 24'>
                     <path d='M8 5v14l11-7z' />
                   </svg>
-                }
+                )}
               </button>
             </div>
           </div>
@@ -240,41 +413,49 @@ console.log('HomePage component rendered');
       </section>
 
       {/* Categories Section */}
-      <section className='py-16 bg-white'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-4'>
+      <section className='py-8 sm:py-12 lg:py-16 bg-gradient-to-br from-white via-blue-50/30 to-purple-50/30'>
+        <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8'>
+          <div className='text-center mb-8 sm:mb-12'>
+            <h2 className='text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 sm:mb-4'>
               Shop by Category
             </h2>
-            <p className='text-lg text-gray-600 max-w-2xl mx-auto'>
+            <p className='text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed'>
               Explore our carefully curated categories to find exactly what you're looking for.
             </p>
           </div>
           
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
-            {categoryCards.map((category) =>
+          <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6'>
+            {categoryCards.map((category, index) =>
             <Link
               key={category.name}
               to={`/products?category=${encodeURIComponent(category.name)}`}
-              className='group'>
+              className='group transform hover:scale-105 transition-all duration-300'>
 
-                <Card className='h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden'>
-                  <div className='relative h-48 overflow-hidden'>
+                <Card className='h-full hover:shadow-xl transition-all duration-300 overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm'>
+                  <div className='relative h-32 sm:h-40 lg:h-48 overflow-hidden'>
                     <img
                     src={category.image}
                     alt={category.name}
-                    className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300' />
+                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500' />
 
-                    <div className='absolute inset-0 bg-gradient-to-t from-black/60 to-transparent' />
-                    <div className='absolute bottom-4 left-4 text-white'>
+                    <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent' />
+                    <div className={`absolute top-2 right-2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${
+                      index === 0 ? 'from-red-400 to-orange-500' :
+                      index === 1 ? 'from-green-400 to-blue-500' :
+                      index === 2 ? 'from-purple-400 to-pink-500' :
+                      'from-yellow-400 to-red-500'
+                    } flex items-center justify-center text-white font-bold text-xs sm:text-sm animate-pulse`}>
+                      {category.name.charAt(0)}
+                    </div>
+                    <div className='absolute bottom-2 left-2 text-white'>
                       {category.icon}
                     </div>
                   </div>
-                  <CardContent className='p-6'>
-                    <h3 className='text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors'>
+                  <CardContent className='p-3 sm:p-4 lg:p-6'>
+                    <h3 className='text-sm sm:text-base lg:text-xl font-semibold text-gray-900 mb-1 sm:mb-2 group-hover:text-blue-600 transition-colors line-clamp-1'>
                       {category.name}
                     </h3>
-                    <p className='text-gray-600 text-sm'>
+                    <p className='text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed'>
                       {category.description}
                     </p>
                   </CardContent>
@@ -288,39 +469,45 @@ console.log('HomePage component rendered');
  
 
       {/* Top Rated Products */}
-      <section className='py-16 bg-gray-50'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-4 flex items-center justify-center'>
-              <Star className='w-8 h-8 text-yellow-400 mr-3 fill-current' />
-              Top Rated Products
+      <section className='py-8 sm:py-12 lg:py-16 bg-gradient-to-br from-yellow-50/50 via-orange-50/30 to-red-50/50'>
+        <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8'>
+          <div className='text-center mb-8 sm:mb-12'>
+            <h2 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center justify-center'>
+              <Star className='w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-yellow-400 mr-2 sm:mr-3 fill-current animate-pulse' />
+              <span className='bg-gradient-to-r from-yellow-600 via-orange-600 to-red-600 bg-clip-text text-transparent'>
+                Top Rated Products
+              </span>
             </h2>
-            <p className='text-lg text-gray-600 max-w-2xl mx-auto'>
+            <p className='text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed'>
               See what our customers love most - products with the highest ratings and reviews.
             </p>
           </div>
           
-          <Carousel className='w-full'>
-            <CarouselContent className='-ml-1'>
-              {topRatedProducts.map((product) =>
-              <CarouselItem key={product.id} className='pl-1 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4'>
-                  <div className="p-1">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              )}
-            </CarouselContent>
-            <div className="hidden sm:block">
-              <CarouselPrevious />
-              <CarouselNext />
-            </div>
-          </Carousel>
+          <div className='relative'>
+            <Carousel className='w-full'>
+              <CarouselContent className='-ml-1 sm:-ml-2'>
+                {topRatedProducts.map((product) =>
+                <CarouselItem key={product.id} className='pl-1 sm:pl-2 basis-1/2 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4'>
+                    <div className="p-1 sm:p-2">
+                      <div className='transform hover:scale-105 transition-transform duration-300'>
+                        <ProductCard product={product} />
+                      </div>
+                    </div>
+                  </CarouselItem>
+                )}
+              </CarouselContent>
+              <div className="hidden sm:block">
+                <CarouselPrevious className='bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white border-0 shadow-lg' />
+                <CarouselNext className='bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 text-white border-0 shadow-lg' />
+              </div>
+            </Carousel>
+          </div>
           
-          <div className='text-center mt-8'>
-            <Button size='lg' asChild>
-              <Link to='/products'>
+          <div className='text-center mt-6 sm:mt-8'>
+            <Button size='sm' asChild className='bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 px-6 sm:px-8 py-2 sm:py-3 rounded-full'>
+              <Link to='/products' className="group">
                 View All Products
-                <ArrowRight className='ml-2 w-5 h-5' />
+                <ArrowRight className='ml-1 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-1' />
               </Link>
             </Button>
           </div>
@@ -330,38 +517,42 @@ console.log('HomePage component rendered');
 
 
       {/* Featured Products */}
-      <section className='py-16 bg-white'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='text-center mb-12'>
-            <h2 className='text-3xl font-bold text-gray-900 mb-4'>
+      <section className='py-8 sm:py-12 lg:py-16 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-pink-50/50'>
+        <div className='max-w-7xl mx-auto px-3 sm:px-6 lg:px-8'>
+          <div className='text-center mb-8 sm:mb-12'>
+            <h2 className='text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-3 sm:mb-4'>
               Featured Products
             </h2>
-            <p className='text-lg text-gray-600 max-w-2xl mx-auto'>
+            <p className='text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed'>
               Discover our handpicked selection of premium products at amazing prices.
             </p>
           </div>
           
-          <Carousel className='w-full'>
-            <CarouselContent className='-ml-1'>
-              {featuredProducts.map((product) =>
-              <CarouselItem key={product.id} className='pl-1 basis-full sm:basis-1/2 lg:basis-1/3 xl:basis-1/4'>
-                  <div className="p-1">
-                    <ProductCard product={product} />
-                  </div>
-                </CarouselItem>
-              )}
-            </CarouselContent>
-            <div className="hidden sm:block">
-              <CarouselPrevious />
-              <CarouselNext />
-            </div>
-          </Carousel>
+          <div className='relative'>
+            <Carousel className='w-full'>
+              <CarouselContent className='-ml-1 sm:-ml-2'>
+                {featuredProducts.map((product) =>
+                <CarouselItem key={product.id} className='pl-1 sm:pl-2 basis-1/2 sm:basis-1/2 lg:basis-1/3 xl:basis-1/4'>
+                    <div className="p-1 sm:p-2">
+                      <div className='transform hover:scale-105 transition-transform duration-300'>
+                        <ProductCard product={product} />
+                      </div>
+                    </div>
+                  </CarouselItem>
+                )}
+              </CarouselContent>
+              <div className="hidden sm:block">
+                <CarouselPrevious className='bg-gradient-to-r from-blue-400 to-purple-500 hover:from-blue-500 hover:to-purple-600 text-white border-0 shadow-lg' />
+                <CarouselNext className='bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white border-0 shadow-lg' />
+              </div>
+            </Carousel>
+          </div>
           
-          <div className='text-center mt-8'>
-            <Button size='lg' asChild>
-              <Link to='/products'>
+          <div className='text-center mt-6 sm:mt-8'>
+            <Button size='sm' asChild className='bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 px-6 sm:px-8 py-2 sm:py-3 rounded-full'>
+              <Link to='/products' className="group">
                 View All Products
-                <ArrowRight className='ml-2 w-5 h-5' />
+                <ArrowRight className='ml-1 sm:ml-2 w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform group-hover:translate-x-1' />
               </Link>
             </Button>
           </div>

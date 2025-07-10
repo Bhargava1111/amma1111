@@ -3,10 +3,11 @@ import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
+import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
+import webpush from 'web-push';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
-import mongoose from 'mongoose';
-import nodemailer from 'nodemailer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -122,6 +123,7 @@ db.invoices = db.invoices || [];
 db.productVariants = db.productVariants || [];
 db.otpCodes = db.otpCodes || []; // Added for OTP verification
 db.passwordResetTokens = db.passwordResetTokens || []; // Added for password reset functionality
+db.logoSettings = db.logoSettings || []; // Added for logo settings
 
 // Save database to file
 const saveDatabase = () => {
@@ -152,9 +154,9 @@ const createEmailTransporter = () => {
 // Email sending endpoint
 app.post('/api/send-email', async (req, res) => {
   try {
-    const { to, cc, bcc, subject, html, text, attachments, from } = req.body;
+    const { to, cc, bcc, subject, html, text, attachments, from, headers } = req.body;
     
-    console.log('Sending email:', { to, subject, from });
+    console.log('Sending email:', { to, subject, from, headers });
     console.log('Email config:', emailConfig);
     
     // Check if email config is available
@@ -190,6 +192,7 @@ app.post('/api/send-email', async (req, res) => {
       subject,
       html,
       text,
+      headers: headers || {},
       attachments: attachments ? attachments.map(att => ({
         filename: att.filename,
         content: att.content,
@@ -253,6 +256,556 @@ app.post('/api/test-email', async (req, res) => {
     });
   }
 });
+
+// Notification API Endpoints
+
+// Send notification with multiple channels
+app.post('/api/notifications/send', async (req, res) => {
+  try {
+    const { 
+      userId, 
+      userIds, 
+      title, 
+      message, 
+      type = 'system', 
+      channels = ['in_app'], 
+      priority = 'normal',
+      actionUrl,
+      metadata = {},
+      scheduleAt,
+      expiresAt 
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        error: 'Title and message are required'
+      });
+    }
+
+    // Determine target users
+    const targetUsers = userIds || (userId ? [userId] : []);
+    if (targetUsers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one user ID must be provided'
+      });
+    }
+
+    const notifications = [];
+    const emailPromises = [];
+    const whatsappPromises = [];
+
+    // Create notifications for each user
+    for (const uid of targetUsers) {
+      const notificationData = {
+        id: uuidv4(),
+        user_id: uid,
+        title,
+        message,
+        type,
+        channel: channels.includes('in_app') ? 'in_app' : channels[0],
+        status: scheduleAt ? 'scheduled' : 'sent',
+        priority,
+        is_read: false,
+        metadata: JSON.stringify({
+          ...metadata,
+          actionUrl,
+          channels,
+          scheduleAt,
+          expiresAt
+        }),
+        sent_at: scheduleAt ? null : new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        scheduled_at: scheduleAt || null,
+        expires_at: expiresAt || null
+      };
+
+      notifications.push(notificationData);
+      db.notifications.push(notificationData);
+
+      // Send email notification if requested
+      if (channels.includes('email')) {
+        const userProfile = db.userProfiles.find(p => p.user_id === uid);
+        if (userProfile?.email_notifications) {
+          const user = db.users.find(u => u.ID === uid);
+          if (user?.Email) {
+            const emailPromise = sendEnhancedNotificationEmail(user.Email, {
+              title,
+              message,
+              type,
+              priority,
+              actionUrl,
+              userName: user.Name
+            });
+            emailPromises.push(emailPromise);
+          }
+        }
+      }
+
+      // Send WhatsApp notification if requested
+      if (channels.includes('whatsapp')) {
+        const userProfile = db.userProfiles.find(p => p.user_id === uid);
+        if (userProfile?.whatsapp_notifications && userProfile.phone_number) {
+          const whatsappPromise = sendWhatsAppNotification(userProfile.phone_number, {
+            title,
+            message,
+            type,
+            priority
+          });
+          whatsappPromises.push(whatsappPromise);
+        }
+      }
+    }
+
+    // Execute all email and WhatsApp notifications
+    const emailResults = await Promise.allSettled(emailPromises);
+    const whatsappResults = await Promise.allSettled(whatsappPromises);
+
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: {
+        notifications,
+        emailsSent: emailResults.filter(r => r.status === 'fulfilled').length,
+        whatsappSent: whatsappResults.filter(r => r.status === 'fulfilled').length,
+        totalNotifications: notifications.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error sending notifications:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get notification statistics
+app.get('/api/notifications/stats', (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    let notifications = db.notifications;
+    if (userId) {
+      notifications = notifications.filter(n => n.user_id === userId);
+    }
+
+    const stats = {
+      total: notifications.length,
+      unread: notifications.filter(n => !n.is_read).length,
+      byType: {},
+      byPriority: {},
+      byChannel: {},
+      byStatus: {}
+    };
+
+    // Calculate stats by type
+    notifications.forEach(n => {
+      stats.byType[n.type] = (stats.byType[n.type] || 0) + 1;
+      stats.byChannel[n.channel] = (stats.byChannel[n.channel] || 0) + 1;
+      stats.byStatus[n.status] = (stats.byStatus[n.status] || 0) + 1;
+      
+      const metadata = JSON.parse(n.metadata || '{}');
+      const priority = metadata.priority || 'normal';
+      stats.byPriority[priority] = (stats.byPriority[priority] || 0) + 1;
+    });
+
+    res.json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error('Error fetching notification stats:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Mark notifications as read
+app.post('/api/notifications/mark-read', (req, res) => {
+  try {
+    const { notificationIds, userId } = req.body;
+
+    if (!notificationIds || !Array.isArray(notificationIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'notificationIds array is required'
+      });
+    }
+
+    let updatedCount = 0;
+    for (const notificationId of notificationIds) {
+      const notification = db.notifications.find(n => 
+        n.id === notificationId && 
+        (!userId || n.user_id === userId)
+      );
+      
+      if (notification && !notification.is_read) {
+        notification.is_read = true;
+        notification.read_at = new Date().toISOString();
+        updatedCount++;
+      }
+    }
+
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: {
+        updatedCount,
+        totalRequested: notificationIds.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error marking notifications as read:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Delete notifications
+app.delete('/api/notifications', (req, res) => {
+  try {
+    const { notificationIds, userId } = req.body;
+
+    if (!notificationIds || !Array.isArray(notificationIds)) {
+      return res.status(400).json({
+        success: false,
+        error: 'notificationIds array is required'
+      });
+    }
+
+    let deletedCount = 0;
+    for (const notificationId of notificationIds) {
+      const index = db.notifications.findIndex(n => 
+        n.id === notificationId && 
+        (!userId || n.user_id === userId)
+      );
+      
+      if (index !== -1) {
+        db.notifications.splice(index, 1);
+        deletedCount++;
+      }
+    }
+
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: {
+        deletedCount,
+        totalRequested: notificationIds.length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error deleting notifications:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Update user notification preferences
+app.post('/api/notifications/preferences', (req, res) => {
+  try {
+    const { userId, preferences } = req.body;
+
+    if (!userId || !preferences) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and preferences are required'
+      });
+    }
+
+    const userProfile = db.userProfiles.find(p => p.user_id === userId);
+    if (!userProfile) {
+      return res.status(404).json({
+        success: false,
+        error: 'User profile not found'
+      });
+    }
+
+    // Update preferences
+    if (preferences.email_notifications !== undefined) {
+      userProfile.email_notifications = preferences.email_notifications;
+    }
+    if (preferences.whatsapp_notifications !== undefined) {
+      userProfile.whatsapp_notifications = preferences.whatsapp_notifications;
+    }
+    if (preferences.marketing_notifications !== undefined) {
+      userProfile.marketing_notifications = preferences.marketing_notifications;
+    }
+    if (preferences.push_notifications !== undefined) {
+      userProfile.push_notifications = preferences.push_notifications;
+    }
+
+    userProfile.updated_at = new Date().toISOString();
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: userProfile
+    });
+
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Enhanced email notification function
+async function sendEnhancedNotificationEmail(email, notification) {
+  try {
+    const transporter = createEmailTransporter();
+    
+    const priorityColors = {
+      urgent: '#ef4444',
+      high: '#f97316',
+      normal: '#3b82f6',
+      low: '#6b7280'
+    };
+
+    const typeIcons = {
+      order: '🛒',
+      system: '🔔',
+      promotion: '🎉',
+      campaign: '📢'
+    };
+
+    const priorityBadge = notification.priority !== 'normal' ? `
+      <span style="background-color: ${priorityColors[notification.priority]}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; text-transform: uppercase;">
+        ${notification.priority}
+      </span>
+    ` : '';
+
+    const actionButton = notification.actionUrl ? `
+      <div style="margin: 20px 0;">
+        <a href="${notification.actionUrl}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold;">
+          View Details
+        </a>
+      </div>
+    ` : '';
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9fafb;">
+        <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #1f2937; margin: 0; font-size: 24px;">
+              ${typeIcons[notification.type] || '🔔'} MANAfoods Notification
+            </h1>
+            ${priorityBadge}
+          </div>
+          
+          <div style="margin-bottom: 20px;">
+            <h2 style="color: #1f2937; margin: 0 0 10px 0; font-size: 20px;">
+              ${notification.title}
+            </h2>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.6; margin: 0;">
+              ${notification.message}
+            </p>
+          </div>
+          
+          ${actionButton}
+          
+          <div style="border-top: 1px solid #e5e7eb; margin-top: 30px; padding-top: 20px;">
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">
+              Hello ${notification.userName || 'Valued Customer'},<br>
+              This notification was sent to you from MANAfoods. 
+              If you have any questions, please contact our support team.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              © 2024 MANAfoods. All rights reserved.<br>
+              You can manage your notification preferences in your account settings.
+            </p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const mailOptions = {
+      from: 'MANAfoods <no-reply@manaeats.com>',
+      to: email,
+      subject: `${typeIcons[notification.type] || '🔔'} ${notification.title}`,
+      html,
+      headers: {
+        'X-Priority': notification.priority === 'urgent' ? '1' : notification.priority === 'high' ? '2' : '3',
+        'X-MSMail-Priority': notification.priority === 'urgent' ? 'High' : 'Normal'
+      }
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Enhanced notification email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+
+  } catch (error) {
+    console.error('Error sending enhanced notification email:', error);
+    throw error;
+  }
+}
+
+// WhatsApp notification function
+async function sendWhatsAppNotification(phoneNumber, notification) {
+  try {
+    // Format WhatsApp message based on notification type and priority
+    const formattedMessage = formatWhatsAppNotification(notification);
+    
+    console.log('WhatsApp notification sent to:', phoneNumber, {
+      type: notification.type,
+      priority: notification.priority,
+      title: notification.title
+    });
+    
+    // Store in WhatsApp messages table
+    db.whatsapp = db.whatsapp || [];
+    const whatsappMessage = {
+      id: uuidv4(),
+      phone_number: phoneNumber,
+      message_type: 'notification',
+      message_content: formattedMessage,
+      status: 'sent',
+      notification_type: notification.type,
+      priority: notification.priority,
+      user_id: notification.userId || null,
+      campaign_id: notification.campaignId || null,
+      sent_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    db.whatsapp.push(whatsappMessage);
+
+    return { success: true, messageId: `whatsapp_${Date.now()}` };
+
+  } catch (error) {
+    console.error('Error sending WhatsApp notification:', error);
+    throw error;
+  }
+}
+
+// Format notification for WhatsApp
+function formatWhatsAppNotification(notification) {
+  const { title, message, type, priority = 'normal', actionUrl } = notification;
+
+  // Get appropriate emoji based on type and priority
+  const getNotificationEmoji = (type, priority) => {
+    if (priority === 'urgent') return '🚨';
+    if (priority === 'high') return '⚡';
+    
+    switch (type) {
+      case 'order': return '🛒';
+      case 'system': return '🔔';
+      case 'promotion': return '🎉';
+      case 'campaign': return '📢';
+      default: return '💬';
+    }
+  };
+
+  const emoji = getNotificationEmoji(type, priority);
+  const priorityText = priority === 'urgent' ? ' *[URGENT]*' : priority === 'high' ? ' *[HIGH]*' : '';
+
+  let formattedMessage = `${emoji} *${title}*${priorityText}\n\n${message}`;
+
+  // Add action URL if provided
+  if (actionUrl) {
+    formattedMessage += `\n\n🔗 *Take Action:* ${actionUrl}`;
+  }
+
+  // Add footer with business info
+  formattedMessage += `\n\n📱 *MANAfoods Notification*`;
+  formattedMessage += `\n⏰ ${new Date().toLocaleString()}`;
+  
+  // Add support contact for urgent notifications
+  if (priority === 'urgent') {
+    formattedMessage += `\n📞 *Urgent Support:* +91 98765 43210`;
+  }
+
+  return formattedMessage;
+}
+
+// Scheduled notifications processor (runs every minute)
+setInterval(async () => {
+  try {
+    const now = new Date();
+    const scheduledNotifications = db.notifications.filter(n => 
+      n.status === 'scheduled' && 
+      n.scheduled_at && 
+      new Date(n.scheduled_at) <= now
+    );
+
+    for (const notification of scheduledNotifications) {
+      notification.status = 'sent';
+      notification.sent_at = new Date().toISOString();
+
+      // Send email if configured
+      const metadata = JSON.parse(notification.metadata || '{}');
+      if (metadata.channels?.includes('email')) {
+        const user = db.users.find(u => u.ID === notification.user_id);
+        if (user?.Email) {
+          try {
+            await sendEnhancedNotificationEmail(user.Email, {
+              title: notification.title,
+              message: notification.message,
+              type: notification.type,
+              priority: metadata.priority || 'normal',
+              actionUrl: metadata.actionUrl,
+              userName: user.Name
+            });
+          } catch (error) {
+            console.error('Error sending scheduled email notification:', error);
+          }
+        }
+      }
+    }
+
+    if (scheduledNotifications.length > 0) {
+      saveDatabase();
+      console.log(`Processed ${scheduledNotifications.length} scheduled notifications`);
+    }
+
+  } catch (error) {
+    console.error('Error processing scheduled notifications:', error);
+  }
+}, 60000); // Run every minute
+
+// Cleanup expired notifications (runs every hour)
+setInterval(() => {
+  try {
+    const now = new Date();
+    const initialCount = db.notifications.length;
+    
+    db.notifications = db.notifications.filter(n => {
+      const metadata = JSON.parse(n.metadata || '{}');
+      return !metadata.expiresAt || new Date(metadata.expiresAt) > now;
+    });
+
+    const cleanedCount = initialCount - db.notifications.length;
+    if (cleanedCount > 0) {
+      saveDatabase();
+      console.log(`Cleaned up ${cleanedCount} expired notifications`);
+    }
+
+  } catch (error) {
+    console.error('Error cleaning up expired notifications:', error);
+  }
+}, 3600000); // Run every hour
 
 // Initialize with some data if empty
 if (db.users.length === 0) {
@@ -988,6 +1541,10 @@ app.post('/api/table/:tableId', (req, res) => {
       case 'invoices':
         tableData = db.invoices;
         break;
+      case '10424':
+      case 'logoSettings':
+        tableData = db.logoSettings;
+        break;
       default:
         console.warn(`[SERVER] Table ID ${tableId} not found.`);
         return res.status(404).json({ success: false, error: 'Table not found' });
@@ -1135,6 +1692,10 @@ app.post('/api/table/create/:tableId', (req, res) => {
       case 'invoices':
         targetArray = db.invoices;
         break;
+      case '10424': // Logo Settings
+      case 'logoSettings':
+        targetArray = db.logoSettings;
+        break;
       default:
         return res.status(404).json({ success: false, error: 'Table not found' });
     }
@@ -1248,11 +1809,28 @@ app.post('/api/table/update/:tableId', (req, res) => {
       case 'invoices':
         targetArray = db.invoices;
         break;
+      case '10424':
+      case 'logoSettings':
+        targetArray = db.logoSettings;
+        break;
       default:
         return res.status(404).json({ success: false, error: 'Table not found' });
     }
   
-    const index = targetArray.findIndex(item => item.id == id || item.ID == id || item.user_id == id);
+    let index = -1;
+    
+    // Use appropriate ID matching logic based on table type
+    if (tableId === '10412' || tableId === 'notifications') {
+      // For notifications, only match by id or ID fields, not user_id
+      index = targetArray.findIndex(item => item.id == id || item.ID == id);
+    } else if (tableId === '10399' || tableId === 'wishlist') {
+      // For wishlist, only match by id or ID fields
+      index = targetArray.findIndex(item => item.id == id || item.ID == id);
+    } else {
+      // For other tables, use the original logic
+      index = targetArray.findIndex(item => item.id == id || item.ID == id || item.user_id == id);
+    }
+    
     if (index === -1) {
       return res.status(404).json({ success: false, error: 'Record not found' });
     }
@@ -1315,11 +1893,28 @@ app.post('/api/table/delete/:tableId', (req, res) => {
       case 'invoices':
         targetArray = db.invoices;
         break;
+      case '10424': // Logo Settings
+      case 'logoSettings':
+        targetArray = db.logoSettings;
+        break;
       default:
         return res.status(404).json({ success: false, error: 'Table not found' });
     }
     
-    const index = targetArray.findIndex(item => item.id == id || item.ID == id || item.user_id == id);
+    let index = -1;
+    
+    // Use appropriate ID matching logic based on table type
+    if (tableId === '10412' || tableId === 'notifications') {
+      // For notifications, only match by id or ID fields, not user_id
+      index = targetArray.findIndex(item => item.id == id || item.ID == id);
+    } else if (tableId === '10399' || tableId === 'wishlist') {
+      // For wishlist, only match by id or ID fields
+      index = targetArray.findIndex(item => item.id == id || item.ID == id);
+    } else {
+      // For other tables, use the original logic
+      index = targetArray.findIndex(item => item.id == id || item.ID == id || item.user_id == id);
+    }
+    
     if (index === -1) {
       return res.status(404).json({ success: false, error: 'Record not found' });
     }
@@ -1781,3 +2376,334 @@ const categorySchema = new mongoose.Schema({
   created_at: String
 });
 const Category = mongoose.model('Category', categorySchema);
+
+// Push Notification Endpoints and Configuration
+// webpush is already imported above
+
+// VAPID keys (in production, store these securely)
+const vapidKeys = {
+  publicKey: 'BEl62iUYgUivxIkv69yViEuiBIa40HEMqc3kKaWfqJAUqObBLfvNYxJIe6PQqrxHbxYJlRGNKzGQlNHjnbNdGHE',
+  privateKey: 'U6OvXFdP2u2VnDHqaZgGYPiYjzA2bqvJEQYNHJmxVbw'
+};
+
+// Configure web-push
+webpush.setVapidDetails(
+  'mailto:admin@manaeats.com',
+  vapidKeys.publicKey,
+  vapidKeys.privateKey
+);
+
+// Store push subscriptions in memory (in production, use a database)
+const pushSubscriptions = new Map();
+
+// Subscribe to push notifications
+app.post('/api/push-notifications/subscribe', (req, res) => {
+  try {
+    const { userId, subscription } = req.body;
+
+    if (!userId || !subscription) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId and subscription are required'
+      });
+    }
+
+    // Store subscription
+    pushSubscriptions.set(userId, subscription);
+    
+    // Update user profile with push notification preference
+    const userProfile = db.userProfiles.find(p => p.user_id === userId);
+    if (userProfile) {
+      userProfile.push_notifications = true;
+      userProfile.push_subscription = JSON.stringify(subscription);
+      userProfile.updated_at = new Date().toISOString();
+      saveDatabase();
+    }
+
+    console.log('Push subscription stored for user:', userId);
+    res.json({
+      success: true,
+      message: 'Push subscription stored successfully'
+    });
+
+  } catch (error) {
+    console.error('Error storing push subscription:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Unsubscribe from push notifications
+app.post('/api/push-notifications/unsubscribe', (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId is required'
+      });
+    }
+
+    // Remove subscription
+    pushSubscriptions.delete(userId);
+    
+    // Update user profile
+    const userProfile = db.userProfiles.find(p => p.user_id === userId);
+    if (userProfile) {
+      userProfile.push_notifications = false;
+      userProfile.push_subscription = null;
+      userProfile.updated_at = new Date().toISOString();
+      saveDatabase();
+    }
+
+    console.log('Push subscription removed for user:', userId);
+    res.json({
+      success: true,
+      message: 'Push subscription removed successfully'
+    });
+
+  } catch (error) {
+    console.error('Error removing push subscription:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Send push notification
+app.post('/api/push-notifications/send', async (req, res) => {
+  try {
+    const { 
+      userId, 
+      userIds, 
+      title, 
+      body, 
+      icon, 
+      badge, 
+      tag, 
+      data, 
+      actions, 
+      requireInteraction, 
+      silent 
+    } = req.body;
+
+    if (!title || !body) {
+      return res.status(400).json({
+        success: false,
+        error: 'title and body are required'
+      });
+    }
+
+    // Determine target users
+    const targetUsers = userIds || (userId ? [userId] : []);
+    if (targetUsers.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'At least one user ID must be provided'
+      });
+    }
+
+    const payload = JSON.stringify({
+      title,
+      body,
+      icon: icon || '/favicon.ico',
+      badge: badge || '/favicon.ico',
+      tag: tag || 'default',
+      data: data || {},
+      actions: actions || [],
+      requireInteraction: requireInteraction || false,
+      silent: silent || false,
+      timestamp: Date.now()
+    });
+
+    const pushPromises = [];
+    let successCount = 0;
+    let errorCount = 0;
+
+    // Send to all target users
+    for (const uid of targetUsers) {
+      const subscription = pushSubscriptions.get(uid);
+      if (subscription) {
+        const pushPromise = webpush.sendNotification(subscription, payload)
+          .then(() => {
+            successCount++;
+            console.log('Push notification sent to user:', uid);
+          })
+          .catch((error) => {
+            errorCount++;
+            console.error('Error sending push notification to user:', uid, error);
+            
+            // Remove invalid subscription
+            if (error.statusCode === 410) {
+              pushSubscriptions.delete(uid);
+              const userProfile = db.userProfiles.find(p => p.user_id === uid);
+              if (userProfile) {
+                userProfile.push_notifications = false;
+                userProfile.push_subscription = null;
+              }
+            }
+          });
+        pushPromises.push(pushPromise);
+      }
+    }
+
+    // Wait for all push notifications to complete
+    await Promise.all(pushPromises);
+
+    // Save database if any subscriptions were removed
+    if (errorCount > 0) {
+      saveDatabase();
+    }
+
+    res.json({
+      success: true,
+      data: {
+        totalRequested: targetUsers.length,
+        successCount,
+        errorCount
+      }
+    });
+
+  } catch (error) {
+    console.error('Error sending push notifications:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Test push notification
+app.post('/api/push-notifications/test', async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId is required'
+      });
+    }
+
+    const subscription = pushSubscriptions.get(userId);
+    if (!subscription) {
+      return res.status(404).json({
+        success: false,
+        error: 'No push subscription found for this user'
+      });
+    }
+
+    const payload = JSON.stringify({
+      title: '🧪 Test Push Notification',
+      body: 'This is a test notification from MANAfoods!',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      tag: 'test-notification',
+      data: { test: true },
+      requireInteraction: true,
+      timestamp: Date.now()
+    });
+
+    await webpush.sendNotification(subscription, payload);
+
+    res.json({
+      success: true,
+      message: 'Test push notification sent successfully'
+    });
+
+  } catch (error) {
+    console.error('Error sending test push notification:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Get push notification status
+app.get('/api/push-notifications/status', (req, res) => {
+  try {
+    const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'userId is required'
+      });
+    }
+
+    const hasSubscription = pushSubscriptions.has(userId);
+    const userProfile = db.userProfiles.find(p => p.user_id === userId);
+    const isEnabled = userProfile?.push_notifications || false;
+
+    res.json({
+      success: true,
+      data: {
+        hasSubscription,
+        isEnabled,
+        vapidPublicKey: vapidKeys.publicKey
+      }
+    });
+
+  } catch (error) {
+    console.error('Error getting push notification status:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Track notification interactions
+app.post('/api/notifications/track', (req, res) => {
+  try {
+    const { action, notificationId, timestamp } = req.body;
+
+    // Log interaction for analytics
+    console.log('Notification interaction tracked:', {
+      action,
+      notificationId,
+      timestamp: new Date(timestamp).toISOString()
+    });
+
+    // In production, store this in a database for analytics
+    
+    res.json({
+      success: true,
+      message: 'Interaction tracked successfully'
+    });
+
+  } catch (error) {
+    console.error('Error tracking notification interaction:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Load push subscriptions from database on startup
+function loadPushSubscriptions() {
+  try {
+    db.userProfiles.forEach(profile => {
+      if (profile.push_notifications && profile.push_subscription) {
+        try {
+          const subscription = JSON.parse(profile.push_subscription);
+          pushSubscriptions.set(profile.user_id, subscription);
+        } catch (error) {
+          console.error('Error parsing push subscription for user:', profile.user_id, error);
+        }
+      }
+    });
+    console.log(`Loaded ${pushSubscriptions.size} push subscriptions`);
+  } catch (error) {
+    console.error('Error loading push subscriptions:', error);
+  }
+}
+
+// Load push subscriptions on startup
+loadPushSubscriptions();

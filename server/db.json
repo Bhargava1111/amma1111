@@ -486,19 +486,6 @@
   ],
   "notifications": [
     {
-      "id": "1",
-      "user_id": "1",
-      "title": "Notification 1",
-      "message": "This is notification 1 message content.",
-      "type": "promotion",
-      "channel": "whatsapp",
-      "status": "sent",
-      "is_read": true,
-      "metadata": "{\"key\":\"value\"}",
-      "sent_at": "2025-07-06T12:25:51.940Z",
-      "created_at": "2025-06-15T12:25:51.940Z"
-    },
-    {
       "id": "2",
       "user_id": "1",
       "title": "Notification 2",
@@ -590,19 +577,6 @@
       "created_at": "2025-06-17T12:25:51.940Z"
     },
     {
-      "id": "9",
-      "user_id": "1",
-      "title": "Notification 9",
-      "message": "This is notification 9 message content.",
-      "type": "campaign",
-      "channel": "whatsapp",
-      "status": "failed",
-      "is_read": false,
-      "metadata": "{\"key\":\"value\"}",
-      "sent_at": "2025-06-29T12:25:51.940Z",
-      "created_at": "2025-06-07T12:25:51.940Z"
-    },
-    {
       "id": "10",
       "user_id": "1",
       "title": "Notification 10",
@@ -668,7 +642,8 @@
       "status": "sent",
       "created_at": "2025-07-06T15:57:00.688Z",
       "sent_at": "2025-07-06T15:57:00.688Z",
-      "id": "48e1e80a-9f0b-4e8d-bff3-11eda8581151"
+      "id": "48e1e80a-9f0b-4e8d-bff3-11eda8581151",
+      "is_read": true
     },
     {
       "user_id": "1",
@@ -677,7 +652,7 @@
       "type": "order",
       "channel": "in_app",
       "status": "sent",
-      "is_read": false,
+      "is_read": true,
       "created_at": "2025-07-06T15:57:00.707Z",
       "sent_at": "2025-07-06T15:57:00.707Z",
       "id": "d701b341-9e0a-4952-ac13-72ce5119547f"
@@ -691,7 +666,8 @@
       "status": "sent",
       "created_at": "2025-07-06T16:36:14.817Z",
       "sent_at": "2025-07-06T16:36:14.817Z",
-      "id": "d72a6a78-2d79-4e96-9ffe-dbb4f7f2aac7"
+      "id": "d72a6a78-2d79-4e96-9ffe-dbb4f7f2aac7",
+      "is_read": true
     },
     {
       "user_id": "2",
@@ -711,7 +687,7 @@
       "type": "order",
       "channel": "in_app",
       "status": "sent",
-      "is_read": false,
+      "is_read": true,
       "metadata": "{\"order_id\":\"ORDER_1751825136499\",\"customer_id\":\"2\",\"order_total\":913,\"item_count\":3,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:05:36.836Z\",\"action_url\":\"/admin/orders/ORDER_1751825136499\"}",
       "created_at": "2025-07-06T18:05:36.836Z",
       "sent_at": "2025-07-06T18:05:36.836Z",
@@ -759,7 +735,7 @@
       "type": "order",
       "channel": "in_app",
       "status": "sent",
-      "is_read": false,
+      "is_read": true,
       "metadata": "{\"order_id\":\"ORDER_1751827060637\",\"customer_id\":\"2\",\"order_total\":735,\"item_count\":1,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:37:41.065Z\",\"action_url\":\"/admin/orders/ORDER_1751827060637\"}",
       "created_at": "2025-07-06T18:37:41.065Z",
       "sent_at": "2025-07-06T18:37:41.065Z",
@@ -796,7 +772,7 @@
       "type": "order",
       "channel": "in_app",
       "status": "sent",
-      "is_read": false,
+      "is_read": true,
       "metadata": "{\"order_id\":\"ORDER_1751827081246\",\"customer_id\":\"2\",\"order_total\":735,\"item_count\":1,\"payment_method\":\"Razorpay\",\"order_date\":\"2025-07-06T18:38:01.545Z\",\"action_url\":\"/admin/orders/ORDER_1751827081246\"}",
       "created_at": "2025-07-06T18:38:01.545Z",
       "sent_at": "2025-07-06T18:38:01.545Z",
@@ -814,6 +790,19 @@
       "created_at": "2025-07-06T18:38:01.546Z",
       "sent_at": "2025-07-06T18:38:01.546Z",
       "id": "b27f189d-01bd-4f8a-9662-ad2e9551e31b"
+    }
+  ],
+  "logoSettings": [
+    {
+      "id": "1",
+      "logo_url": "",
+      "logo_text": "MANAfoods",
+      "show_text": true,
+      "logo_position": "left",
+      "logo_size": "medium",
+      "updated_by": "1",
+      "updated_at": "2025-01-01T00:00:00.000Z",
+      "is_active": true
     }
   ],
   "categories": [
@@ -888,21 +877,9 @@
   "wishlist": [
     {
       "user_id": "1",
-      "product_id": "9",
-      "added_date": "2025-07-06T12:39:24.073Z",
-      "id": "a956e4ae-05ea-4953-bd51-8f7a10ec4681"
-    },
-    {
-      "user_id": "1",
       "product_id": "8",
       "added_date": "2025-07-06T14:39:13.808Z",
       "id": "16ee83e1-a988-4e94-92eb-87bed07dfd22"
-    },
-    {
-      "user_id": "1",
-      "product_id": "f63e56b4-d971-4022-90d3-2c2e9ab9539f",
-      "added_date": "2025-07-06T15:43:50.389Z",
-      "id": "5082c52e-992a-4c78-8813-2c599469fa08"
     },
     {
       "user_id": "1",
@@ -921,6 +898,12 @@
       "product_id": "1",
       "added_date": "2025-07-06T18:36:00.694Z",
       "id": "bf03c960-8eda-4a95-9769-f412f9625535"
+    },
+    {
+      "user_id": "1",
+      "product_id": "f63e56b4-d971-4022-90d3-2c2e9ab9539f",
+      "added_date": "2025-07-09T10:34:44.997Z",
+      "id": "09f3685b-7d6e-4f58-bda6-692cf6948086"
     }
   ],
   "reviews": [

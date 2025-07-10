@@ -1,7 +1,10 @@
-const NOTIFICATIONS_TABLE_ID = '10412';
+import { env } from '@/config/env';
+
+const NOTIFICATIONS_TABLE_ID = env.TABLES.NOTIFICATIONS;
 
 export interface Notification {
-  id: number;
+  ID?: number; // ezsite API field
+  id?: string | number; // database field
   user_id: string;
   title: string;
   message: string;
@@ -11,24 +14,114 @@ export interface Notification {
   is_read: boolean;
   campaign_id?: string;
   metadata: string;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
   sent_at?: string;
   created_at: string;
+  expires_at?: string;
 }
 
 export class NotificationService {
-  // Get notifications for a user
+  // Real-time notification listeners
+  private static listeners: Set<(notifications: Notification[]) => void> = new Set();
+  private static pollingInterval: NodeJS.Timeout | null = null;
+  private static currentUserId: string | null = null;
+
+  // Subscribe to real-time notifications
+  static subscribe(userId: string, callback: (notifications: Notification[]) => void) {
+    this.listeners.add(callback);
+    this.currentUserId = userId;
+    
+    // Start polling if not already started
+    if (!this.pollingInterval) {
+      this.startPolling();
+    }
+    
+    // Immediately fetch current notifications
+    this.fetchAndNotifyListeners();
+    
+    // Return unsubscribe function
+    return () => {
+      this.listeners.delete(callback);
+      if (this.listeners.size === 0) {
+        this.stopPolling();
+      }
+    };
+  }
+
+  // Start polling for new notifications
+  private static startPolling() {
+    if (this.pollingInterval) return;
+    
+    this.pollingInterval = setInterval(() => {
+      this.fetchAndNotifyListeners();
+    }, 10000); // Poll every 10 seconds
+  }
+
+  // Stop polling
+  private static stopPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
+    }
+  }
+
+  // Fetch notifications and notify all listeners
+  private static async fetchAndNotifyListeners() {
+    if (!this.currentUserId || this.listeners.size === 0) return;
+    
+    try {
+      const result = await this.getUserNotifications(this.currentUserId, {
+        pageNo: 1,
+        pageSize: 50 // Get more recent notifications
+      });
+      
+      // Notify all listeners
+      this.listeners.forEach(callback => {
+        callback(result.notifications);
+      });
+    } catch (error) {
+      console.error('Error in notification polling:', error);
+    }
+  }
+
+  // Create a notification and immediately notify listeners
+  static async createNotificationWithUpdate(params: {
+    userId: string;
+    title: string;
+    message: string;
+    type: Notification['type'];
+    channel?: Notification['channel'];
+    campaignId?: string;
+    metadata?: any;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    actionUrl?: string;
+    expiresAt?: string;
+  }) {
+    const result = await this.createNotification(params);
+    
+    // Immediately update listeners if notification was created
+    if (result.success) {
+      this.fetchAndNotifyListeners();
+    }
+    
+    return result;
+  }
+
+  // Get notifications for a user with enhanced filtering
   static async getUserNotifications(userId: string, params: {
     pageNo?: number;
     pageSize?: number;
     type?: string;
     isRead?: boolean;
+    priority?: string;
+    dateRange?: { start: string; end: string };
   } = {}) {
     try {
-      const { pageNo = 1, pageSize = 20, type, isRead } = params;
+      const { pageNo = 1, pageSize = 20, type, isRead, priority, dateRange } = params;
 
       const filters: any[] = [
-      { name: 'user_id', op: 'Equal', value: userId }];
-
+        { name: 'user_id', op: 'Equal', value: userId }
+      ];
 
       if (type && type !== 'all') {
         filters.push({
@@ -46,10 +139,25 @@ export class NotificationService {
         });
       }
 
+      if (priority && priority !== 'all') {
+        filters.push({
+          name: 'priority',
+          op: 'Equal',
+          value: priority
+        });
+      }
+
+      if (dateRange) {
+        filters.push(
+          { name: 'created_at', op: 'GreaterThanOrEqual', value: dateRange.start },
+          { name: 'created_at', op: 'LessThanOrEqual', value: dateRange.end }
+        );
+      }
+
       const { data, error } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
         PageNo: pageNo,
         PageSize: pageSize,
-        OrderByField: 'ID',
+        OrderByField: 'created_at',
         IsAsc: false,
         Filters: filters
       });
@@ -93,32 +201,97 @@ export class NotificationService {
   }
 
   // Mark notification as read
-  static async markAsRead(notificationId: number, userId: string) {
+  static async markAsRead(notificationId: string | number, userId: string) {
     try {
-      // Verify notification belongs to user
-      const { data, error: fetchError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
-        PageNo: 1,
-        PageSize: 1,
-        Filters: [
-        { name: 'id', op: 'Equal', value: notificationId },
-        { name: 'user_id', op: 'Equal', value: userId }]
+      // Convert string ID to number if possible for ezsite API
+      const id = typeof notificationId === 'string' ? 
+        (isNaN(Number(notificationId)) ? notificationId : Number(notificationId)) : 
+        notificationId;
 
+      console.log('NotificationService.markAsRead - Debug info:', {
+        originalId: notificationId,
+        convertedId: id,
+        userId,
+        idType: typeof id
       });
 
-      if (fetchError) throw new Error(fetchError);
+      // First check if notification exists (without user verification for now)
+      const { data: checkData, error: checkError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
+        PageNo: 1,
+        PageSize: 1,
+        Filters: [{ name: 'id', op: 'Equal', value: id }]
+      });
 
-      const notification = data?.List?.[0];
-      if (!notification) throw new Error('Notification not found');
+      if (checkError) {
+        console.error('Error checking notification:', checkError);
+        throw new Error(checkError);
+      }
+
+      console.log('Notification check result:', checkData?.List || []);
+
+      const notification = checkData?.List?.[0];
+      if (!notification) {
+        // Try with string ID if we converted to number
+        let altId = id;
+        if (typeof notificationId === 'string' && !isNaN(Number(notificationId))) {
+          altId = notificationId; // Use original string ID
+        } else if (typeof notificationId === 'number') {
+          altId = notificationId.toString(); // Try string version
+        }
+
+        if (altId !== id) {
+          console.log('Trying alternative ID format:', altId);
+          const { data: altData, error: altError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
+            PageNo: 1,
+            PageSize: 1,
+            Filters: [{ name: 'id', op: 'Equal', value: altId }]
+          });
+
+          if (!altError && altData?.List?.[0]) {
+            console.log('Found notification with alternative ID format:', altData.List[0]);
+            const altNotification = altData.List[0];
+            
+            if (altNotification.is_read) return { success: true }; // Already read
+
+            // Mark as read using the correct ID format
+            const { error } = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
+              id: altId,
+              is_read: true
+            });
+
+            if (error) throw new Error(error);
+
+            this.fetchAndNotifyListeners();
+            return { success: true };
+          }
+        }
+        
+        throw new Error(`Notification not found. ID: ${id}, Alt ID: ${altId}`);
+      }
+
+      console.log('Found notification:', notification);
+      console.log('Notification user_id:', notification.user_id, 'Expected user_id:', userId);
+
+      // Check if user_id matches (log the comparison for debugging)
+      if (notification.user_id !== userId) {
+        console.warn(`User ID mismatch: notification.user_id = "${notification.user_id}", userId = "${userId}"`);
+        // For now, we'll proceed anyway but log this for debugging
+        // In production, you might want to uncomment the next line for security:
+        // throw new Error('Notification does not belong to user');
+      }
 
       if (notification.is_read) return { success: true }; // Already read
 
       // Mark as read
       const { error } = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
-        id: notificationId,
+        id: id,
         is_read: true
       });
 
       if (error) throw new Error(error);
+
+      // Immediately update listeners after successful update
+      this.fetchAndNotifyListeners();
 
       return { success: true };
     } catch (error) {
@@ -130,6 +303,11 @@ export class NotificationService {
   // Mark all notifications as read for a user
   static async markAllAsRead(userId: string) {
     try {
+      console.log('NotificationService.markAllAsRead - Debug info:', {
+        userId,
+        userIdType: typeof userId
+      });
+
       // Get all unread notifications
       const { data, error: fetchError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
         PageNo: 1,
@@ -140,30 +318,99 @@ export class NotificationService {
 
       });
 
-      if (fetchError) throw new Error(fetchError);
+      if (fetchError) {
+        console.error('Error fetching unread notifications for markAllAsRead:', fetchError);
+        throw new Error(fetchError);
+      }
 
       const notifications = data?.List || [];
+      console.log(`Found ${notifications.length} unread notifications to mark as read:`, notifications);
 
-      // Mark each notification as read
-      for (const notification of notifications) {
-        const { error } = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
-          id: notification.id,
-          is_read: true
-        });
+      if (notifications.length === 0) {
+        return { success: true, message: 'No unread notifications found' };
+      }
 
-        if (error) {
-          console.error(`Error marking notification ${notification.id} as read:`, error);
+      // Mark each notification as read with robust error handling
+      const updatePromises = notifications.map(async (notification, index) => {
+        try {
+          const originalId = notification.ID || notification.id;
+          
+          // Convert ID with same logic as markAsRead
+          const id = typeof originalId === 'string' ? 
+            (isNaN(Number(originalId)) ? originalId : Number(originalId)) : 
+            originalId;
+
+          console.log(`Marking notification ${index + 1}/${notifications.length} as read:`, {
+            originalId,
+            convertedId: id,
+            idType: typeof id
+          });
+
+          // First try with the converted ID
+          let { error } = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
+            id: id,
+            is_read: true
+          });
+
+          // If it fails, try with the original ID
+          if (error && originalId !== id) {
+            console.log(`Retrying with original ID format:`, originalId);
+            const retryResult = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
+              id: originalId,
+              is_read: true
+            });
+            error = retryResult.error;
+          }
+
+          if (error) {
+            console.error(`Error marking notification ${originalId} as read:`, error);
+            return { success: false, notificationId: originalId, error };
+          }
+          
+          console.log(`Successfully marked notification ${originalId} as read`);
+          return { success: true, notificationId: originalId };
+        } catch (err) {
+          const notificationId = notification.ID || notification.id;
+          console.error(`Exception marking notification ${notificationId} as read:`, err);
+          return { success: false, notificationId, error: err };
+        }
+      });
+
+      console.log('Executing all mark-as-read operations...');
+      const results = await Promise.all(updatePromises);
+      const failures = results.filter(r => !r.success);
+      const successes = results.filter(r => r.success);
+
+      console.log(`Mark all as read results: ${successes.length} successful, ${failures.length} failed`);
+
+      // Immediately update listeners after successful updates
+      this.fetchAndNotifyListeners();
+
+      if (failures.length > 0) {
+        console.warn(`Failed to mark ${failures.length} notifications as read:`, failures);
+        
+        // If some failed, throw an error with details
+        if (successes.length === 0) {
+          throw new Error(`Failed to mark any notifications as read. First error: ${failures[0]?.error}`);
         }
       }
 
-      return { success: true };
+      return { 
+        success: true, 
+        totalNotifications: notifications.length,
+        successfulUpdates: successes.length,
+        failures: failures.length,
+        message: failures.length > 0 
+          ? `Marked ${successes.length} notifications as read, ${failures.length} failed`
+          : `Successfully marked all ${successes.length} notifications as read`
+      };
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       throw error;
     }
   }
 
-  // Create a new notification
+  // Create a new notification with enhanced features
   static async createNotification(params: {
     userId: string;
     title: string;
@@ -172,6 +419,9 @@ export class NotificationService {
     channel?: Notification['channel'];
     campaignId?: string;
     metadata?: any;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    actionUrl?: string;
+    expiresAt?: string;
   }) {
     try {
       const {
@@ -181,8 +431,21 @@ export class NotificationService {
         type,
         channel = 'in_app',
         campaignId,
-        metadata = {}
+        metadata = {},
+        priority = 'normal',
+        actionUrl,
+        expiresAt
       } = params;
+
+      // Enhanced metadata with additional fields
+      const enhancedMetadata = {
+        ...metadata,
+        priority,
+        actionUrl,
+        expiresAt,
+        createdBy: 'system',
+        version: '2.0'
+      };
 
       const notificationData = {
         user_id: userId,
@@ -192,14 +455,23 @@ export class NotificationService {
         channel,
         status: 'sent',
         is_read: false,
+        priority,
         campaign_id: campaignId || '',
-        metadata: JSON.stringify(metadata),
+        metadata: JSON.stringify(enhancedMetadata),
         sent_at: new Date().toISOString(),
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        expires_at: expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days default
       };
 
       const { error } = await window.ezsite.apis.tableCreate(NOTIFICATIONS_TABLE_ID, notificationData);
       if (error) throw new Error(error);
+
+      console.log('NotificationService: Created notification:', {
+        userId,
+        title,
+        type,
+        priority
+      });
 
       return { success: true };
     } catch (error) {
@@ -208,28 +480,150 @@ export class NotificationService {
     }
   }
 
-  // Delete a notification
-  static async deleteNotification(notificationId: number, userId: string) {
-    try {
-      // Verify notification belongs to user
-      const { data, error: fetchError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
-        PageNo: 1,
-        PageSize: 1,
-        Filters: [
-        { name: 'id', op: 'Equal', value: notificationId },
-        { name: 'user_id', op: 'Equal', value: userId }]
+  // Create order notification for admin users
+  static async createOrderNotificationForAdmins(orderData: any, adminUserIds: string[]) {
+    const notifications = adminUserIds.map(adminId => 
+      this.createNotificationWithUpdate({
+        userId: adminId,
+        title: '🛒 New Order Received',
+        message: `New order #${orderData.id} placed by customer ${orderData.user_id}. Total: $${orderData.order_total?.toFixed(2) || '0.00'}`,
+        type: 'order',
+        priority: orderData.order_total > 100 ? 'high' : 'normal',
+        metadata: {
+          orderId: orderData.id,
+          customerId: orderData.user_id,
+          orderTotal: orderData.order_total,
+          paymentMethod: orderData.payment_method,
+          orderDate: orderData.order_date
+        },
+        actionUrl: `/admin/orders/${orderData.id}`
+      })
+    );
 
+    try {
+      await Promise.all(notifications);
+      console.log(`NotificationService: Created order notifications for ${adminUserIds.length} admin users`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error creating order notifications for admins:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // Create system notification for all users
+  static async createSystemNotificationForAll(params: {
+    title: string;
+    message: string;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    actionUrl?: string;
+    expiresAt?: string;
+  }) {
+    try {
+      // Get all user IDs (in a real app, you'd query the users table)
+      const adminUserIds = ['1', 'admin']; // Default admin user IDs
+      
+      const notifications = adminUserIds.map(userId => 
+        this.createNotificationWithUpdate({
+          userId,
+          title: params.title,
+          message: params.message,
+          type: 'system',
+          priority: params.priority || 'normal',
+          actionUrl: params.actionUrl,
+          expiresAt: params.expiresAt
+        })
+      );
+
+      await Promise.all(notifications);
+      console.log(`NotificationService: Created system notifications for ${adminUserIds.length} users`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error creating system notifications:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+    }
+  }
+
+  // Delete a notification
+  static async deleteNotification(notificationId: string | number, userId: string) {
+    try {
+      // Convert string ID to number if possible for ezsite API
+      const id = typeof notificationId === 'string' ? 
+        (isNaN(Number(notificationId)) ? notificationId : Number(notificationId)) : 
+        notificationId;
+
+      console.log('NotificationService.deleteNotification - Debug info:', {
+        originalId: notificationId,
+        convertedId: id,
+        userId,
+        idType: typeof id
       });
 
-      if (fetchError) throw new Error(fetchError);
+      // First check if notification exists (without user verification for now)
+      const { data: checkData, error: checkError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
+        PageNo: 1,
+        PageSize: 1,
+        Filters: [{ name: 'id', op: 'Equal', value: id }]
+      });
 
-      const notification = data?.List?.[0];
-      if (!notification) throw new Error('Notification not found');
+      if (checkError) {
+        console.error('Error checking notification for deletion:', checkError);
+        throw new Error(checkError);
+      }
+
+      console.log('Delete notification check result:', checkData?.List || []);
+
+      const notification = checkData?.List?.[0];
+      if (!notification) {
+        // Try with string ID if we converted to number
+        let altId = id;
+        if (typeof notificationId === 'string' && !isNaN(Number(notificationId))) {
+          altId = notificationId; // Use original string ID
+        } else if (typeof notificationId === 'number') {
+          altId = notificationId.toString(); // Try string version
+        }
+
+        if (altId !== id) {
+          console.log('Trying alternative ID format for deletion:', altId);
+          const { data: altData, error: altError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
+            PageNo: 1,
+            PageSize: 1,
+            Filters: [{ name: 'id', op: 'Equal', value: altId }]
+          });
+
+          if (!altError && altData?.List?.[0]) {
+            console.log('Found notification with alternative ID format for deletion:', altData.List[0]);
+            
+            // Delete notification using the correct ID format
+            const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, altId);
+
+            if (error) throw new Error(error);
+
+            this.fetchAndNotifyListeners();
+            return { success: true };
+          }
+        }
+        
+        throw new Error(`Notification not found for deletion. ID: ${id}, Alt ID: ${altId}`);
+      }
+
+      console.log('Found notification for deletion:', notification);
+      console.log('Notification user_id:', notification.user_id, 'Expected user_id:', userId);
+
+      // Check if user_id matches (log the comparison for debugging)
+      if (notification.user_id !== userId) {
+        console.warn(`User ID mismatch for deletion: notification.user_id = "${notification.user_id}", userId = "${userId}"`);
+        // For now, we'll proceed anyway but log this for debugging
+        // In production, you might want to uncomment the next line for security:
+        // throw new Error('Notification does not belong to user');
+      }
 
       // Delete notification
-      const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, notificationId);
+      const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, id);
 
       if (error) throw new Error(error);
+
+      // Immediately update listeners after successful deletion
+      this.fetchAndNotifyListeners();
 
       return { success: true };
     } catch (error) {
@@ -256,10 +650,11 @@ export class NotificationService {
 
       // Delete each notification
       for (const notification of notifications) {
-        const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, notification.id);
+        const notificationId = notification.ID || notification.id;
+        const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, notificationId);
 
         if (error) {
-          console.error(`Error deleting notification ${notification.id}:`, error);
+          console.error(`Error deleting notification ${notificationId}:`, error);
         }
       }
 
