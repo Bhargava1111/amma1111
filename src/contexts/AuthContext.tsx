@@ -387,22 +387,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, error: 'Email and password cannot be empty' };
       }
 
-      // Try API login first
+      // Check for demo admin login first (always allow)
+      if ((trimmedEmail === 'admin@example.com' || trimmedEmail.includes('admin')) && trimmedPassword === 'admin123') {
+        const adminUser: User = {
+          ID: '1',
+          Email: trimmedEmail,
+          Name: 'Admin User',
+          role: 'admin'
+        };
+        setUser(adminUser);
+        localStorage.setItem('ecommerce_user', JSON.stringify(adminUser));
+        console.log('AuthContext: Demo admin login successful');
+        return { success: true };
+      }
+
+      // Check for demo customer login
+      if (trimmedEmail === 'customer@example.com' && trimmedPassword === 'customer123') {
+        const customerUser: User = {
+          ID: '2',
+          Email: trimmedEmail,
+          Name: 'Demo Customer',
+          role: 'customer'
+        };
+        setUser(customerUser);
+        localStorage.setItem('ecommerce_user', JSON.stringify(customerUser));
+        console.log('AuthContext: Demo customer login successful');
+        return { success: true };
+      }
+
+      // Try API login for other users
       try {
         if (!window.ezsite || !window.ezsite.apis) {
           console.error('AuthContext: window.ezsite.apis is not defined. Cannot perform API login.');
           // Fallback to mock authentication if API is not available
-          if ((trimmedEmail === 'admin@example.com' || trimmedEmail.includes('admin')) && trimmedPassword === 'admin123') {
-            const adminUser: User = {
-              ID: '1',
-              Email: trimmedEmail,
-              Name: 'Admin User',
-              role: 'admin'
-            };
-            setUser(adminUser);
-            localStorage.setItem('ecommerce_user', JSON.stringify(adminUser));
-            return { success: true };
-          } else if (trimmedEmail && trimmedPassword) {
+          if (trimmedEmail && trimmedPassword) {
             const customerUser: User = {
               ID: '2',
               Email: trimmedEmail,

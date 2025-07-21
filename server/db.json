@@ -32,7 +32,7 @@
       "name": "Mango",
       "description": "bhargava",
       "price": 1000,
-      "image": "/uploads/product-1753062554955-828928215.jpg",
+      "image": "/uploads/product-1753071506158-174698841.jpg",
       "category_id": "Mixed Pickles",
       "stock": 50,
       "features": [
@@ -44,7 +44,7 @@
       "expiry_date": "",
       "barcode": "",
       "created_at": "2025-07-13T19:49:54.866Z",
-      "updated_at": "2025-07-21T01:49:20.339Z"
+      "updated_at": "2025-07-21T04:19:34.241Z"
     }
   ],
   "orders": [
@@ -2423,10 +2423,22 @@
   "campaigns": [],
   "wishlist": [
     {
+      "user_id": "1",
+      "product_id": "af198629-1a71-4118-b49e-a599b347628d",
+      "added_date": "2025-07-06T16:36:14.772Z",
+      "id": "fb24145f-29d8-4bd0-9ed4-8029562ca867"
+    },
+    {
       "user_id": "2",
       "product_id": "1",
       "added_date": "2025-07-06T18:36:00.694Z",
       "id": "bf03c960-8eda-4a95-9769-f412f9625535"
+    },
+    {
+      "user_id": "1",
+      "product_id": "f63e56b4-d971-4022-90d3-2c2e9ab9539f",
+      "added_date": "2025-07-09T10:34:44.997Z",
+      "id": "09f3685b-7d6e-4f58-bda6-692cf6948086"
     }
   ],
   "reviews": [
