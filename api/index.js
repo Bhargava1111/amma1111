@@ -66,7 +66,7 @@ if (db.banners.length === 0) {
       id: '1',
       title: 'Welcome to MANAfoods',
       subtitle: 'Traditional Indian Pickles',
-      image_url: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=800&h=400&fit=crop',
+      image_url: 'https://picsum.photos/800/400?random=1',
       link: '/products',
       active: true,
       created_at: new Date().toISOString()
@@ -75,7 +75,7 @@ if (db.banners.length === 0) {
       id: '2',
       title: 'Special Offers',
       subtitle: 'Up to 30% off on selected items',
-      image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=400&fit=crop',
+      image_url: 'https://picsum.photos/800/400?random=2',
       link: '/offers',
       active: true,
       created_at: new Date().toISOString()
@@ -90,7 +90,7 @@ if (db.products.length === 0) {
       name: 'Mango Pickle',
       description: 'Traditional spicy mango pickle',
       price: 150,
-      image: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=400&fit=crop',
+      image: 'https://picsum.photos/400/400?random=3',
       category: 'Pickles',
       stock: 50,
       created_at: new Date().toISOString()
@@ -100,9 +100,29 @@ if (db.products.length === 0) {
       name: 'Lemon Pickle',
       description: 'Tangy lemon pickle with spices',
       price: 120,
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
+      image: 'https://picsum.photos/400/400?random=4',
       category: 'Pickles',
       stock: 30,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'Mixed Pickle',
+      description: 'Assorted vegetable pickle',
+      price: 180,
+      image: 'https://picsum.photos/400/400?random=5',
+      category: 'Pickles',
+      stock: 25,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '4',
+      name: 'Chilli Pickle',
+      description: 'Spicy red chilli pickle',
+      price: 90,
+      image: 'https://picsum.photos/400/400?random=6',
+      category: 'Pickles',
+      stock: 40,
       created_at: new Date().toISOString()
     }
   ];
@@ -114,18 +134,32 @@ if (db.categories.length === 0) {
       id: '1',
       name: 'Pickles',
       description: 'Traditional Indian pickles',
-      image: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=400&fit=crop',
+      image: 'https://picsum.photos/400/400?random=7',
       created_at: new Date().toISOString()
     },
     {
       id: '2',
       name: 'Spices',
       description: 'Authentic Indian spices',
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
+      image: 'https://picsum.photos/400/400?random=8',
       created_at: new Date().toISOString()
     }
   ];
 }
+
+// Fix existing product images if they have broken URLs
+db.products.forEach(product => {
+  if (product.image && (product.image.includes('unsplash.com') || !product.image.startsWith('http'))) {
+    product.image = `https://picsum.photos/400/400?random=${Math.floor(Math.random() * 1000)}`;
+  }
+});
+
+// Fix existing banner images if they have broken URLs
+db.banners.forEach(banner => {
+  if (banner.image_url && (banner.image_url.includes('unsplash.com') || !banner.image_url.startsWith('http'))) {
+    banner.image_url = `https://picsum.photos/800/400?random=${Math.floor(Math.random() * 1000)}`;
+  }
+});
 
 // Save database function
 const saveDatabase = () => {
@@ -309,6 +343,29 @@ app.post('/api/auth/login', (req, res) => {
       }
     });
 
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Image proxy endpoint to handle CORS issues
+app.get('/api/image-proxy', (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).json({ error: 'URL parameter is required' });
+    }
+    
+    // For now, just return the URL as-is
+    // In production, you might want to proxy the image through your server
+    res.json({ 
+      success: true, 
+      imageUrl: url,
+      fallbackUrl: 'https://picsum.photos/400/400?random=' + Math.floor(Math.random() * 1000)
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
