@@ -46,6 +46,7 @@ function NotificationCenter() {
   const unsubscribeRef = useRef<(() => void) | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
 
   // Handle real-time notification updates
   const handleNotificationUpdate = useCallback((updatedNotifications: EnhancedNotification[]) => {
@@ -174,71 +175,62 @@ function NotificationCenter() {
 
   const deleteNotification = async (notificationId: string | number) => {
     if (!user) return;
-    
     try {
-      // Convert to number for ezsite API if it's a string number
-      const id = typeof notificationId === 'string' ? 
-        (isNaN(Number(notificationId)) ? notificationId : Number(notificationId)) : 
-        notificationId;
-      
-      await NotificationService.deleteNotification(id as number, user.ID);
-
-      // Find the notification to check if it was unread
-      const notification = notifications.find((n) => (n.ID || n.id) == notificationId); // Use == for loose comparison
-      
-      // Update both notifications arrays
-      setNotifications((prev) => prev.filter((n) => (n.ID || n.id) != notificationId)); // Use != for loose comparison
-      setAllNotifications((prev) => prev.filter((n) => (n.ID || n.id) != notificationId)); // Use != for loose comparison
-      
-      if (notification && !notification.is_read) {
-        setUnreadCount((prev) => Math.max(0, prev - 1));
-      }
-      
+      // The service now expects a numeric ID and handles the refresh internally.
+      await NotificationService.deleteNotification(notificationId, user.ID);
       toast({
         title: 'Success',
-        description: 'Notification deleted'
+        description: 'Notification deleted.',
       });
-    } catch (error) {
+      // The real-time listener will handle the UI update automatically.
+    } catch (error: any) {
       console.error('Error deleting notification:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete notification',
-        variant: 'destructive'
+        description: error.message || 'Failed to delete notification. Please try again.',
+        variant: 'destructive',
       });
     }
   };
 
   const markAllAsRead = async () => {
     if (!user) return;
-    
-    const unreadNotifications = notifications.filter((n) => !n.is_read);
-    if (unreadNotifications.length === 0) {
+    setIsMarkingAllRead(true);
+
+    const unreadCountBefore = allNotifications.filter(n => !n.is_read).length;
+    if (unreadCountBefore === 0) {
       toast({
-        title: 'Info',
-        description: 'No unread notifications to mark'
+        title: 'No Unread Notifications',
+        description: 'All notifications have already been read.',
       });
+      setIsMarkingAllRead(false);
       return;
     }
 
     try {
-      await NotificationService.markAllAsRead(user.ID);
-
-      // Update both notifications arrays
-      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setAllNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      setUnreadCount(0);
-      
-      toast({
-        title: 'Success',
-        description: `Marked ${unreadNotifications.length} notifications as read`
-      });
-    } catch (error) {
+      const result = await NotificationService.markAllAsRead(user.ID);
+      // The service's real-time listener will automatically update the UI.
+      if (result.failures && result.failures > 0) {
+        toast({
+          title: 'Partial Success',
+          description: result.message,
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Success',
+          description: result.message || `Marked all ${result.successfulUpdates} notifications as read.`,
+        });
+      }
+    } catch (error: any) {
       console.error('Error marking all as read:', error);
       toast({
         title: 'Error',
-        description: 'Failed to mark all as read',
-        variant: 'destructive'
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
       });
+    } finally {
+      setIsMarkingAllRead(false);
     }
   };
 
@@ -397,8 +389,14 @@ function NotificationCenter() {
                     variant="ghost"
                     size="sm"
                     onClick={markAllAsRead}
-                    className="text-xs h-8">
-                    <CheckCheck className="h-4 w-4 mr-1" />
+                    className="text-xs h-8"
+                    disabled={isMarkingAllRead}
+                  >
+                    {isMarkingAllRead ? (
+                      <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <CheckCheck className="h-4 w-4 mr-1" />
+                    )}
                     Mark all read
                   </Button>
                 )}
@@ -452,11 +450,10 @@ function NotificationCenter() {
                         const metadata = getMetadata(notification.metadata);
                         const priority = metadata.priority || 'normal';
                         const hasAction = Boolean(metadata.actionUrl);
-                        const notificationKey = notification.ID || notification.id || index;
                         const notificationId = notification.ID || notification.id;
                         
                         return (
-                          <div key={notificationKey}>
+                          <div key={notificationId || index}>
                             <div
                               className={`p-4 hover:bg-gray-50 transition-all duration-200 cursor-pointer ${
                                 !notification.is_read 
@@ -728,4 +725,3 @@ function NotificationCenter() {
 }
 
 export default NotificationCenter;
-

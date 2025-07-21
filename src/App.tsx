@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import SEOProvider from "./components/SEO/SEOProvider";
+import { usePageTracking } from "./components/SEO/Analytics";
 
 // Context Providers
 import { AuthProvider } from "./contexts/AuthContext";
@@ -32,6 +34,38 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  usePageTracking(); // Track page views automatically
+  
+  return (
+    <>
+      <Navigation />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/product/:id" element={<ProductDetailPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/login" element={<AuthPage />} />
+        <Route path="/register" element={<AuthPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/orders" element={<OrderTrackingPage />} />
+        <Route path="/orders/:trackingNumber" element={<OrderTrackingPage />} />
+        <Route path="/wishlist" element={<WishlistPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/onauthsuccess" element={<OnAuthSuccessPage />} />
+        <Route path="/resetpassword" element={<ResetPasswordPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Footer />
+    </>
+  );
+};
+
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -43,34 +77,15 @@ const App = () => {
             v7_startTransition: true
           }}
         >
-          <AuthProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <Navigation />
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/product/:id" element={<ProductDetailPage />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route path="/register" element={<AuthPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/orders" element={<OrderTrackingPage />} />
-                  <Route path="/wishlist" element={<WishlistPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
-                  <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
-                  <Route path="/blog" element={<BlogPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="/onauthsuccess" element={<OnAuthSuccessPage />} />
-                  <Route path="/resetpassword" element={<ResetPasswordPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <Footer />
-              </WishlistProvider>
-            </CartProvider>
-          </AuthProvider>
+          <SEOProvider>
+            <AuthProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <AppContent />
+                </WishlistProvider>
+              </CartProvider>
+            </AuthProvider>
+          </SEOProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

@@ -176,7 +176,7 @@ const ReportingAnalytics: React.FC<ReportingAnalyticsProps> = () => {
                 <CardContent className="p-6 flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-gray-900">${totalRevenue.toFixed(2)}</p>
+                    <p className="text-2xl font-bold text-gray-900">₹{totalRevenue.toFixed(2)}</p>
                   </div>
                   <DollarSign className="h-8 w-8 text-green-600" />
                 </CardContent>

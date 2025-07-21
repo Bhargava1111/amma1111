@@ -285,8 +285,8 @@ function NotificationScheduler() {
       ...prev,
       title: template.title,
       message: template.message,
-      type: template.type,
-      priority: template.priority,
+      type: template.type as any,
+      priority: template.priority as any,
       channels: template.channels
     }));
   };

@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import ProductCard from '../components/ProductCard';
-import { mockProducts, categories, fetchProducts } from '../data/products';
+import { fetchProducts } from '../data/products';
+import SEOHead from '../components/SEO/SEOHead';
+import StructuredData from '../components/SEO/StructuredData';
 import {
   ShoppingBag,
   Truck,
@@ -20,36 +22,8 @@ import {
   Headphones as HeadphonesIcon } from
 'lucide-react';
 
-// Mock banners for fallback/testing
-const mockBanners = [
-  {
-    id: '1',
-    title: 'Premium Pickles Collection',
-    subtitle: 'Authentic Homemade Flavors',
-    description: 'Discover our traditional pickles made with fresh ingredients and time-honored recipes.',
-    image: 'https://images.unsplash.com/photo-1606787366850-de6330128bfc?w=1200&h=600&fit=crop&auto=format',
-    link: '/products?category=pickles',
-    cta: 'Shop Now'
-  },
-  {
-    id: '2',
-    title: 'Fresh & Organic',
-    subtitle: 'Farm to Table Quality',
-    description: 'Experience the taste of nature with our organic, preservative-free pickle varieties.',
-    image: 'https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=1200&h=600&fit=crop&auto=format',
-    link: '/products?category=organic',
-    cta: 'Explore'
-  },
-  {
-    id: '3',
-    title: 'Special Offers',
-    subtitle: 'Up to 30% Off',
-    description: 'Limited time deals on your favorite pickle varieties. Stock up and save big!',
-    image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&h=600&fit=crop&auto=format',
-    link: '/products?sale=true',
-    cta: 'Save Now'
-  }
-];
+// Remove import of mockProducts and mockBanners
+// Only use backend fetches for products and banners
 
 const HomePage: React.FC = () => {
 console.log('HomePage component rendered');
@@ -62,8 +36,8 @@ console.log('HomePage component rendered');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  const [featuredProducts, setFeaturedProducts] = useState(mockProducts().slice(0, 6));
-  const [topRatedProducts, setTopRatedProducts] = useState(mockProducts().slice(0, 6));
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [topRatedProducts, setTopRatedProducts] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
   const [bannersLoading, setBannersLoading] = useState(true);
 
@@ -124,10 +98,10 @@ console.log('HomePage component rendered');
         if (json.success && json.data?.length > 0) {
           setBanners(json.data);
         } else {
-          setBanners(mockBanners); // Use mock banners as fallback
+          // setBanners(mockBanners); // Use mock banners as fallback - REMOVED
         }
       } catch (e) {
-        setBanners(mockBanners); // Use mock banners on error
+        // setBanners(mockBanners); // Use mock banners on error - REMOVED
       } finally {
         setBannersLoading(false);
       }
@@ -279,6 +253,43 @@ console.log('HomePage component rendered');
 
 
   return (
+    <>
+      <SEOHead
+        title="MANAfoods - Premium Quality Food Products Online | Fresh Ingredients & Gourmet Selections"
+        description="Discover premium quality food products at MANAfoods. Fresh ingredients, organic options, and gourmet selections delivered to your door. Shop chicken pickles, mutton pickles, veg pickles, and traditional gongura pickles with fast delivery and best prices."
+        keywords="food products, organic food, gourmet food, fresh ingredients, online grocery, premium food, healthy eating, food delivery, chicken pickles, mutton pickles, veg pickles, gongura pickles, traditional pickles, spicy pickles"
+        type="website"
+        image="/images/manafoods-homepage-banner.jpg"
+      />
+      
+      <StructuredData
+        organization={{
+          name: "MANAfoods",
+          url: window.location.origin,
+          logo: `${window.location.origin}/images/manafoods-logo.png`,
+          description: "Premium quality food products and online grocery delivery service specializing in traditional pickles and gourmet selections",
+          contactPoint: {
+            telephone: "+1-555-MANA-FOOD",
+            contactType: "customer service",
+            email: "info@manafoods.com"
+          },
+          sameAs: [
+            "https://facebook.com/manafoods",
+            "https://twitter.com/manafoods",
+            "https://instagram.com/manafoods"
+          ]
+        }}
+        website={{
+          name: "MANAfoods",
+          url: window.location.origin,
+          description: "Premium quality food products and online grocery delivery service",
+          potentialAction: {
+            target: `${window.location.origin}/products?search={search_term_string}`,
+            queryInput: "required name=search_term_string"
+          }
+        }}
+      />
+      
     <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50'>
       {/* Banner Carousel */}
       <section className='relative px-2 sm:px-4 lg:px-6'>
@@ -425,19 +436,19 @@ console.log('HomePage component rendered');
           </div>
           
           <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6'>
-            {categoryCards.map((category, index) =>
-            <Link
-              key={category.name}
-              to={`/products?category=${encodeURIComponent(category.name)}`}
-              className='group transform hover:scale-105 transition-all duration-300'>
-
+            {categoryCards.map((category, index) => (
+              <Link
+                key={category.name}
+                to={`/products?category=${encodeURIComponent(category.name)}`}
+                className='group transform hover:scale-105 transition-all duration-300'
+              >
                 <Card className='h-full hover:shadow-xl transition-all duration-300 overflow-hidden border-0 shadow-lg bg-gradient-to-br from-white to-gray-50/50 backdrop-blur-sm'>
                   <div className='relative h-32 sm:h-40 lg:h-48 overflow-hidden'>
                     <img
-                    src={category.image}
-                    alt={category.name}
-                    className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500' />
-
+                      src={category.image}
+                      alt={category.name}
+                      className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                    />
                     <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent' />
                     <div className={`absolute top-2 right-2 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${
                       index === 0 ? 'from-red-400 to-orange-500' :
@@ -461,7 +472,7 @@ console.log('HomePage component rendered');
                   </CardContent>
                 </Card>
               </Link>
-            )}
+            ))}
           </div>
         </div>
       </section>
@@ -670,8 +681,9 @@ console.log('HomePage component rendered');
           </div>
         </div>
       </section>
-    </div>);
-
+    </div>
+    </>
+  );
 };
 
 export default HomePage;

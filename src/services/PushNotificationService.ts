@@ -113,7 +113,7 @@ export class PushNotificationService {
     badge?: string;
     tag?: string;
     data?: any;
-    actions?: NotificationAction[];
+    actions?: any[];
     requireInteraction?: boolean;
     silent?: boolean;
   }): Promise<void> {
@@ -132,7 +132,7 @@ export class PushNotificationService {
       badge: options.badge || '/favicon.ico',
       tag: options.tag,
       data: options.data,
-      actions: options.actions,
+
       requireInteraction: options.requireInteraction || false,
       silent: options.silent || false
     };
@@ -211,7 +211,7 @@ export class PushNotificationService {
   }
 
   // Get notification actions for different types
-  static getNotificationActions(type: string): NotificationAction[] {
+  static getNotificationActions(type: string): Array<{ action: string; title: string }> {
     switch (type) {
       case 'order':
         return [
@@ -236,7 +236,7 @@ export class PushNotificationService {
   }
 
   // Handle notification click
-  static handleNotificationClick(event: NotificationEvent): void {
+  static handleNotificationClick(event: any): void {
     event.notification.close();
 
     if (event.action === 'view') {
@@ -245,14 +245,14 @@ export class PushNotificationService {
       const url = data?.actionUrl || '/';
       
       event.waitUntil(
-        clients.matchAll().then(clientList => {
+        (self as any).clients?.matchAll().then((clientList: any) => {
           for (const client of clientList) {
             if (client.url === url && 'focus' in client) {
               return client.focus();
             }
           }
-          if (clients.openWindow) {
-            return clients.openWindow(url);
+          if ((self as any).clients?.openWindow) {
+            return (self as any).clients.openWindow(url);
           }
         })
       );

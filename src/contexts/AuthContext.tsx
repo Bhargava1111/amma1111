@@ -418,7 +418,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         const { error } = await window.ezsite.apis.login(trimmedEmail, trimmedPassword);
-        if (error) throw new Error(error);
+        if (error) {
+          console.error('AuthContext: Login API error:', error);
+          throw new Error(error);
+        }
 
         // Get user info after successful login
         const { data, error: userError } = await window.ezsite.apis.getUserInfo();
@@ -446,31 +449,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         return { success: true };
       } catch (apiError) {
-        console.error('AuthContext: API login error, falling back to mock authentication:', apiError);
-        // Fallback to mock authentication for backward compatibility
-        if ((trimmedEmail === 'admin@example.com' || trimmedEmail.includes('admin')) && trimmedPassword === 'admin123') {
-          const adminUser: User = {
-            ID: '1',
-            Email: trimmedEmail,
-            Name: 'Admin User',
-            role: 'admin'
-          };
-          setUser(adminUser);
-          localStorage.setItem('ecommerce_user', JSON.stringify(adminUser));
-          return { success: true };
-        } else if (trimmedEmail && trimmedPassword) {
-          const customerUser: User = {
-            ID: '2',
-            Email: trimmedEmail,
-            Name: trimmedEmail.split('@')[0],
-            role: 'customer'
-          };
-          setUser(customerUser);
-          localStorage.setItem('ecommerce_user', JSON.stringify(customerUser));
-          return { success: true };
-        } else {
-          return { success: false, error: 'Invalid credentials' };
-        }
+        console.error('AuthContext: API login error:', apiError);
+        // Show error to user, do not fallback to mock authentication
+        return { success: false, error: 'Login failed. Please check your credentials.' };
       }
     } catch (error) {
       console.error('Login error:', error);

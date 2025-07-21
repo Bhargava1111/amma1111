@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { useNavigate, Link } from 'react-router-dom';
 import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import ProductCard from '../components/ProductCard';
-import { mockProducts } from '../data/products';
 import { Product } from '../types';
+import { fetchProducts } from '../data/products';
 
 export default function CartPage() {
   const { user } = useAuth();
@@ -16,22 +16,18 @@ export default function CartPage() {
   const navigate = useNavigate();
 
   // Get related products based on cart items
-  const getRelatedProducts = (): Product[] => {
+  const getRelatedProducts = async (): Promise<Product[]> => {
     if (items.length === 0) return [];
-    
-    // Get all available products
-    const allProducts = mockProducts();
-    
     // Get categories from current cart items
     const cartCategories = items.map(item => item.category);
-    
+    // Fetch all products from backend
+    const allProducts = await fetchProducts();
     // Find products in similar categories that are not in cart
     const cartProductIds = items.map(item => item.id);
     const related = allProducts.filter(product => 
       cartCategories.includes(product.category) && 
       !cartProductIds.includes(product.id)
     );
-    
     // If not enough related products, add popular products
     if (related.length < 4) {
       const popularProducts = allProducts
@@ -40,14 +36,15 @@ export default function CartPage() {
           !related.find(r => r.id === product.id)
         )
         .sort((a, b) => b.rating - a.rating);
-      
       related.push(...popularProducts.slice(0, 4 - related.length));
     }
-    
     return related.slice(0, 4);
   };
 
-  const relatedProducts = getRelatedProducts();
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  useEffect(() => {
+    getRelatedProducts().then(setRelatedProducts);
+  }, [items]);
 
   if (!user) {
     return (
@@ -115,7 +112,7 @@ export default function CartPage() {
                             className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             <h3 className="font-medium text-gray-900 truncate">{item.name}</h3>
-                            <p className="text-sm text-gray-600">${item.price.toFixed(2)} each</p>
+                            <p className="text-sm text-gray-600">₹{(item.price).toFixed(2)} each</p>
                           </div>
                           <Button
                             variant="ghost"
@@ -145,7 +142,7 @@ export default function CartPage() {
                               <Plus className="h-3 w-3" />
                             </Button>
                           </div>
-                          <p className="font-bold text-lg">${(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="font-bold text-lg">₹{(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                       </div>
                       
@@ -157,7 +154,7 @@ export default function CartPage() {
                           className="w-16 h-16 object-cover rounded-lg" />
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">{item.name}</h3>
-                          <p className="text-sm text-gray-600">${item.price.toFixed(2)}</p>
+                          <p className="text-sm text-gray-600">₹{(item.price).toFixed(2)}</p>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Button
@@ -176,7 +173,7 @@ export default function CartPage() {
                           </Button>
                         </div>
                         <div className="text-right">
-                          <p className="font-medium">${(item.price * item.quantity).toFixed(2)}</p>
+                          <p className="font-medium">₹{(item.price * item.quantity).toFixed(2)}</p>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -200,23 +197,34 @@ export default function CartPage() {
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Subtotal</span>
-                  <span>${getTotalPrice().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span>Free</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tax</span>
-                  <span>${(getTotalPrice() * 0.08).toFixed(2)}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between font-bold">
-                  <span>Total</span>
-                  <span>${(getTotalPrice() * 1.08).toFixed(2)}</span>
-                </div>
+                {/* Convert prices to rupees to match checkout */}
+                {(() => {
+                  const subtotal = getTotalPrice();
+                  const shipping = subtotal > 999 ? 0 : 99;
+                  const tax = subtotal * 0.18;
+                  const finalTotal = subtotal + shipping + tax;
+                  return (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Subtotal</span>
+                        <span>₹{subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Shipping</span>
+                        <span>{shipping > 0 ? `₹${shipping.toFixed(2)}` : 'Free'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>GST (18%)</span>
+                        <span>₹{tax.toFixed(2)}</span>
+                      </div>
+                      <Separator />
+                      <div className="flex justify-between font-bold">
+                        <span>Total</span>
+                        <span>₹{finalTotal.toFixed(2)}</span>
+                      </div>
+                    </>
+                  );
+                })()}
                 <Button className="w-full" onClick={() => navigate('/checkout')}>
                   Proceed to Checkout
                 </Button>

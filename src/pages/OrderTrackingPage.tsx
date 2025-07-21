@@ -15,13 +15,15 @@ import {
   Eye,
   Loader2
 } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { OrderService, Order, OrderItem } from '../services/OrderService';
 
 const OrderTrackingPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const trackingNumber = searchParams.get("trackingNumber");
+  const { trackingNumber: routeTrackingNumber } = useParams();
+  const queryTrackingNumber = searchParams.get("trackingNumber");
+  const trackingNumber = routeTrackingNumber || queryTrackingNumber;
   const [order, setOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -198,7 +200,7 @@ const OrderTrackingPage: React.FC = () => {
                     {new Date(order.order_date).toLocaleDateString()}
                   </div>
                   <div className="flex items-center">
-                    <span className="font-medium">${order.order_total.toFixed(2)}</span>
+                    <span className="font-medium">₹{(order.order_total * 83).toFixed(0)}</span>
                   </div>
                   {order.delivery_partner_name && (
                     <div className="flex items-center">
@@ -284,11 +286,11 @@ const OrderTrackingPage: React.FC = () => {
                           {item.product_name}
                         </p>
                         <p className="text-sm text-gray-600">
-                          Qty: {item.quantity} × ${item.product_price.toFixed(2)}
+                          Qty: {item.quantity} × ₹{(item.product_price * 83).toFixed(0)}
                         </p>
                       </div>
                       <div className="text-sm font-medium text-gray-900">
-                        ${(item.quantity * item.product_price).toFixed(2)}
+                        ₹{(item.quantity * item.product_price * 83).toFixed(0)}
                       </div>
                     </div>
                   ))}

@@ -89,7 +89,7 @@ const ProductQuickView: React.FC<ProductQuickViewProps> = ({ product, isOpen, on
           <div className="relative">
             <div className="aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 border shadow-lg">
               <img
-                src={product.image}
+                src={`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : ''}${product.image_url || product.image}`}
                 alt={product.name}
                 className="w-full h-full object-cover"
                 onError={(e) => {

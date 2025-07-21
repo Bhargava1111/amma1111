@@ -163,7 +163,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <CardContent className="p-0 flex-grow">
           <div className="relative overflow-hidden">
             <ImageFallback
-              src={product.image}
+              src={`${(import.meta.env.VITE_PRODUCTION_URL || '').replace(/\/$/, '')}/${(product.image_url || product.image || '').replace(/^\//, '').replace(/^\./, '')}`}
               alt={product.name}
               className="w-full h-32 sm:h-40 md:h-48 lg:h-52 object-cover transition-transform duration-500 group-hover:scale-110"
             />
@@ -309,7 +309,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         className="text-xs sm:text-sm py-2">
                         <div className="flex justify-between items-center w-full">
                           <span>{variant.weight}</span>
-                          <span className="text-green-600 font-medium">₹{variant.price}</span>
+                          <span className="text-green-600 font-medium">₹{variant.price.toFixed(0)}</span>
                         </div>
                       </SelectItem>
                     ))}

@@ -27,6 +27,7 @@ import {
   Heart } from
 'lucide-react';
 import NotificationCenter from './NotificationCenter';
+import DemoCredentials from './DemoCredentials';
 import { useLogo } from '../hooks/use-logo';
 
 const Navigation: React.FC = () => {
@@ -36,6 +37,7 @@ const Navigation: React.FC = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showDemoCredentials, setShowDemoCredentials] = useState(false);
   const { logoSettings } = useLogo();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -243,6 +245,14 @@ const Navigation: React.FC = () => {
               </DropdownMenu> :
 
             <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowDemoCredentials(true)}
+                  className="text-xs"
+                >
+                  🧪 Demo
+                </Button>
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/auth">Login</Link>
                 </Button>
@@ -427,6 +437,12 @@ const Navigation: React.FC = () => {
           </div>
         }
       </div>
+      
+      {/* Demo Credentials Modal */}
+      <DemoCredentials 
+        isOpen={showDemoCredentials} 
+        onClose={() => setShowDemoCredentials(false)} 
+      />
     </nav>);
 
 };

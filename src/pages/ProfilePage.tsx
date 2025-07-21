@@ -70,7 +70,7 @@ const ProfilePage: React.FC = () => {
       if (userProfile) {
         // Update existing profile
         const { error } = await window.ezsite.apis.tableUpdate(10411, {
-          ID: userProfile?.ID || "",
+          ID: (userProfile as any)?.id || "",
           full_name: profile.fullName,
           phone_number: profile.phone,
           avatar_url: profile.avatarUrl,
@@ -120,7 +120,7 @@ const ProfilePage: React.FC = () => {
     try {
       if (userProfile) {
         const { error } = await window.ezsite.apis.tableUpdate(10411, {
-          ID: userProfile?.ID || "",
+          ID: (userProfile as any)?.id || "",
           email_notifications: notifications.emailNotifications,
           whatsapp_notifications: notifications.whatsappNotifications,
           marketing_notifications: notifications.marketingNotifications,

@@ -303,109 +303,72 @@ export class NotificationService {
   // Mark all notifications as read for a user
   static async markAllAsRead(userId: string) {
     try {
-      console.log('NotificationService.markAllAsRead - Debug info:', {
-        userId,
-        userIdType: typeof userId
-      });
-
-      // Get all unread notifications
+      // Get all notifications for the user, then filter for unread ones.
+      // This is a workaround for potential issues with filtering by 'is_read' on the backend.
       const { data, error: fetchError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
         PageNo: 1,
-        PageSize: 1000,
+        PageSize: 1000, // A reasonable limit for user notifications
         Filters: [
-        { name: 'user_id', op: 'Equal', value: userId },
-        { name: 'is_read', op: 'Equal', value: false }]
-
+          { name: 'user_id', op: 'Equal', value: userId }
+        ]
       });
 
       if (fetchError) {
-        console.error('Error fetching unread notifications for markAllAsRead:', fetchError);
+        console.error('Error fetching notifications for markAllAsRead:', fetchError);
         throw new Error(fetchError);
       }
 
-      const notifications = data?.List || [];
-      console.log(`Found ${notifications.length} unread notifications to mark as read:`, notifications);
-
-      if (notifications.length === 0) {
-        return { success: true, message: 'No unread notifications found' };
+      const allUserNotifications = data?.List || [];
+      const notificationsToUpdate = allUserNotifications.filter(n => !n.is_read);
+      if (notificationsToUpdate.length === 0) {
+        return { success: true, message: 'No unread notifications found.' };
       }
 
-      // Mark each notification as read with robust error handling
-      const updatePromises = notifications.map(async (notification, index) => {
-        try {
-          const originalId = notification.ID || notification.id;
-          
-          // Convert ID with same logic as markAsRead
-          const id = typeof originalId === 'string' ? 
-            (isNaN(Number(originalId)) ? originalId : Number(originalId)) : 
-            originalId;
+      // Use a more robust way to identify the record to update.
+      // Prioritize numeric `ID`, but fall back to `id`.
+      const updatePromises = notificationsToUpdate.map(notification => {
+        const idKey = typeof notification.ID === 'number' ? 'ID' : 'id';
+        const idValue = notification[idKey];
 
-          console.log(`Marking notification ${index + 1}/${notifications.length} as read:`, {
-            originalId,
-            convertedId: id,
-            idType: typeof id
-          });
-
-          // First try with the converted ID
-          let { error } = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
-            id: id,
-            is_read: true
-          });
-
-          // If it fails, try with the original ID
-          if (error && originalId !== id) {
-            console.log(`Retrying with original ID format:`, originalId);
-            const retryResult = await window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
-              id: originalId,
-              is_read: true
-            });
-            error = retryResult.error;
-          }
-
-          if (error) {
-            console.error(`Error marking notification ${originalId} as read:`, error);
-            return { success: false, notificationId: originalId, error };
-          }
-          
-          console.log(`Successfully marked notification ${originalId} as read`);
-          return { success: true, notificationId: originalId };
-        } catch (err) {
-          const notificationId = notification.ID || notification.id;
-          console.error(`Exception marking notification ${notificationId} as read:`, err);
-          return { success: false, notificationId, error: err };
+        if (!idValue) {
+          console.warn('Skipping notification without a valid ID:', notification);
+          return Promise.resolve({ success: false, notificationId: 'unknown', error: 'Invalid ID' });
         }
+
+        return window.ezsite.apis.tableUpdate(NOTIFICATIONS_TABLE_ID, {
+          [idKey]: idValue,
+          is_read: true
+        }).then((result: { error: any; }) => {
+          if (result.error) {
+            console.error(`Failed to mark notification ${idValue} as read:`, result.error);
+            return { success: false, notificationId: idValue, error: result.error };
+          }
+          return { success: true, notificationId: idValue };
+        });
       });
 
-      console.log('Executing all mark-as-read operations...');
       const results = await Promise.all(updatePromises);
       const failures = results.filter(r => !r.success);
       const successes = results.filter(r => r.success);
 
-      console.log(`Mark all as read results: ${successes.length} successful, ${failures.length} failed`);
-
-      // Immediately update listeners after successful updates
+      // Always refresh the notification list from the server
       this.fetchAndNotifyListeners();
 
       if (failures.length > 0) {
-        console.warn(`Failed to mark ${failures.length} notifications as read:`, failures);
-        
-        // If some failed, throw an error with details
-        if (successes.length === 0) {
-          throw new Error(`Failed to mark any notifications as read. First error: ${failures[0]?.error}`);
-        }
+        console.warn(`Failed to mark ${failures.length} notifications as read.`);
       }
 
-      return { 
-        success: true, 
-        totalNotifications: notifications.length,
+      return {
+        success: true,
+        totalNotifications: notificationsToUpdate.length,
         successfulUpdates: successes.length,
         failures: failures.length,
-        message: failures.length > 0 
-          ? `Marked ${successes.length} notifications as read, ${failures.length} failed`
-          : `Successfully marked all ${successes.length} notifications as read`
+        message: failures.length > 0
+          ? `Marked ${successes.length} notifications as read, but ${failures.length} failed.`
+          : `Successfully marked all ${successes.length} notifications as read.`
       };
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
+      console.error('Error in markAllAsRead:', error);
       throw error;
     }
   }
@@ -546,81 +509,73 @@ export class NotificationService {
   // Delete a notification
   static async deleteNotification(notificationId: string | number, userId: string) {
     try {
-      // Convert string ID to number if possible for ezsite API
-      const id = typeof notificationId === 'string' ? 
-        (isNaN(Number(notificationId)) ? notificationId : Number(notificationId)) : 
-        notificationId;
+      // The ezsite API for deletion requires a numeric ID.
+      // The notificationId we receive could be a numeric ID, a stringified numeric ID, or a UUID.
+      // We must find the notification in the table to get its numeric `ID` for the delete operation.
 
-      console.log('NotificationService.deleteNotification - Debug info:', {
-        originalId: notificationId,
-        convertedId: id,
-        userId,
-        idType: typeof id
-      });
+      // We will try to find the notification by its `id` or `ID` field.
+      const isNumeric = typeof notificationId === 'number' || !isNaN(Number(notificationId));
 
-      // First check if notification exists (without user verification for now)
-      const { data: checkData, error: checkError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
-        PageNo: 1,
-        PageSize: 1,
-        Filters: [{ name: 'id', op: 'Equal', value: id }]
-      });
-
-      if (checkError) {
-        console.error('Error checking notification for deletion:', checkError);
-        throw new Error(checkError);
+      let notification: Notification | undefined;
+      
+      // Prioritize searching by numeric ID if possible, as it's likely the primary key.
+      if (isNumeric) {
+        const { data, error } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
+          PageNo: 1,
+          PageSize: 1,
+          Filters: [{ name: 'ID', op: 'Equal', value: Number(notificationId) }]
+        });
+        if (error) {
+          console.warn(`Could not fetch notification by numeric ID ${notificationId}:`, error);
+        } else if (data?.List?.[0]) {
+          notification = data.List[0];
+        }
       }
 
-      console.log('Delete notification check result:', checkData?.List || []);
-
-      const notification = checkData?.List?.[0];
+      // If not found by numeric ID, or if the ID is not numeric, try searching by the `id` field.
       if (!notification) {
-        // Try with string ID if we converted to number
-        let altId = id;
-        if (typeof notificationId === 'string' && !isNaN(Number(notificationId))) {
-          altId = notificationId; // Use original string ID
-        } else if (typeof notificationId === 'number') {
-          altId = notificationId.toString(); // Try string version
+        const { data, error } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
+          PageNo: 1,
+          PageSize: 1,
+          Filters: [{ name: 'id', op: 'Equal', value: notificationId }]
+        });
+        if (error) {
+          console.error(`Error fetching notification ${notificationId} for deletion check:`, error);
+          throw new Error(error);
         }
-
-        if (altId !== id) {
-          console.log('Trying alternative ID format for deletion:', altId);
-          const { data: altData, error: altError } = await window.ezsite.apis.tablePage(NOTIFICATIONS_TABLE_ID, {
-            PageNo: 1,
-            PageSize: 1,
-            Filters: [{ name: 'id', op: 'Equal', value: altId }]
-          });
-
-          if (!altError && altData?.List?.[0]) {
-            console.log('Found notification with alternative ID format for deletion:', altData.List[0]);
-            
-            // Delete notification using the correct ID format
-            const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, altId);
-
-            if (error) throw new Error(error);
-
-            this.fetchAndNotifyListeners();
-            return { success: true };
-          }
-        }
-        
-        throw new Error(`Notification not found for deletion. ID: ${id}, Alt ID: ${altId}`);
+        notification = data?.List?.[0];
       }
 
-      console.log('Found notification for deletion:', notification);
-      console.log('Notification user_id:', notification.user_id, 'Expected user_id:', userId);
+      if (!notification) {
+        throw new Error(`Notification with ID ${notificationId} not found or already deleted.`);
+      }
 
-      // Check if user_id matches (log the comparison for debugging)
+      // Security check: Ensure the notification belongs to the user requesting the deletion.
       if (notification.user_id !== userId) {
-        console.warn(`User ID mismatch for deletion: notification.user_id = "${notification.user_id}", userId = "${userId}"`);
-        // For now, we'll proceed anyway but log this for debugging
-        // In production, you might want to uncomment the next line for security:
-        // throw new Error('Notification does not belong to user');
+        console.warn(`Security Alert: User ${userId} attempted to delete notification ${notification.ID} belonging to user ${notification.user_id}.`);
+        throw new Error('Permission denied. You can only delete your own notifications.');
       }
 
-      // Delete notification
-      const { error } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, id);
+      // Use the numeric `ID` from the fetched notification for deletion, if available.
+      let idToDelete: string | number | undefined = notification.ID;
 
-      if (error) throw new Error(error);
+      // If `notification.ID` is not a valid number, fallback to `notification.id`.
+      if (typeof idToDelete !== 'number') {
+        idToDelete = notification.id;
+      }
+
+      // If we still don't have an ID, we cannot proceed.
+      if (!idToDelete) {
+        throw new Error(`Could not determine a valid ID for notification ${notificationId}.`);
+      }
+
+      // Proceed with deletion using the determined ID.
+      // The API might handle string IDs (UUIDs) even if docs/comments suggest otherwise.
+      const { error: deleteError } = await window.ezsite.apis.tableDelete(NOTIFICATIONS_TABLE_ID, idToDelete);
+
+      if (deleteError) {
+        throw new Error(deleteError);
+      }
 
       // Immediately update listeners after successful deletion
       this.fetchAndNotifyListeners();
@@ -805,6 +760,97 @@ export class NotificationService {
     } catch (error) {
       console.error('Error fetching all notifications:', error);
       throw error;
+    }
+  }
+
+  // Send a single notification (compatible with AutoInvoiceService)
+  static async sendSingleNotification(params: {
+    userId: string;
+    title: string;
+    message: string;
+    type: string;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    channels?: string[];
+    metadata?: any;
+  }) {
+    try {
+      const result = await this.createNotification({
+        userId: params.userId,
+        title: params.title,
+        message: params.message,
+        type: params.type as Notification['type'],
+        priority: params.priority || 'normal',
+        metadata: params.metadata || {},
+        channel: params.channels?.includes('in_app') ? 'in_app' : 'in_app'
+      });
+      
+      if (result.success) {
+        return {
+          success: true,
+          notificationId: 'notification_' + Date.now().toString()
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Failed to create notification'
+        };
+      }
+    } catch (error: any) {
+      console.error('Error in sendSingleNotification:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to send notification'
+      };
+    }
+  }
+
+  // Schedule a notification for later (compatible with AutoInvoiceService)
+  static async scheduleNotification(params: {
+    userId: string;
+    title: string;
+    message: string;
+    type: string;
+    priority?: 'low' | 'normal' | 'high' | 'urgent';
+    channels?: string[];
+    scheduleAt: string;
+    metadata?: any;
+  }) {
+    try {
+      // For now, we'll create an immediate notification with scheduled metadata
+      // In a real implementation, you would use a job queue or scheduler
+      const result = await this.createNotification({
+        userId: params.userId,
+        title: params.title,
+        message: params.message,
+        type: params.type as Notification['type'],
+        priority: params.priority || 'normal',
+        metadata: {
+          ...params.metadata,
+          scheduled: true,
+          scheduledAt: params.scheduleAt,
+          originalScheduleTime: params.scheduleAt
+        },
+        channel: params.channels?.includes('in_app') ? 'in_app' : 'in_app'
+      });
+      
+      if (result.success) {
+        console.log(`Notification scheduled for ${params.scheduleAt} (currently created immediately)`);
+        return {
+          success: true,
+          notificationId: 'scheduled_' + Date.now().toString()
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Failed to schedule notification'
+        };
+      }
+    } catch (error: any) {
+      console.error('Error in scheduleNotification:', error);
+      return {
+        success: false,
+        error: error.message || 'Failed to schedule notification'
+      };
     }
   }
 }

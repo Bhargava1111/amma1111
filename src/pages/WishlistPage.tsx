@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
-import { mockProducts } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { ProductService } from '../services/ProductService';
 
 const WishlistPage: React.FC = () => {
   const { wishlistItems, removeFromWishlist, isLoading, addToWishlist } = useWishlist();
@@ -14,17 +14,25 @@ const WishlistPage: React.FC = () => {
   const [wishlistProducts, setWishlistProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    console.log('WishlistPage: wishlistItems updated:', wishlistItems);
-    console.log('WishlistPage: user:', user);
-    console.log('WishlistPage: isLoading:', isLoading);
-    
-    // Get product details for wishlist items
-    const products = wishlistItems.map((productId) => {
-      return mockProducts().find((product) => product.id === productId);
-    }).filter(Boolean);
-    
-    console.log('WishlistPage: found products:', products);
-    setWishlistProducts(products);
+    // Fetch product details for wishlist items from backend
+    const fetchWishlistProducts = async () => {
+      const products = await Promise.all(
+        wishlistItems.map(async (productId) => {
+          try {
+            // Fetch each product from backend
+            const product = await ProductService.getProductById(productId);
+            return product;
+          } catch (error) {
+            console.warn(`Could not fetch product with ID: ${productId}. It might have been removed.`, error);
+            removeFromWishlist(productId); // Remove invalid item from wishlist
+            return null; // Return null if a product is not found
+          }
+        })
+      );
+      // Filter out any null values before setting the state
+      setWishlistProducts(products.filter(product => product !== null));
+    };
+    fetchWishlistProducts();
   }, [wishlistItems, user, isLoading]);
 
   if (!user) {
@@ -111,7 +119,7 @@ const WishlistPage: React.FC = () => {
                   variant="outline" 
                   onClick={async () => {
                     // Add demo items to wishlist for testing
-                    const demoProductIds = ['1', '2', '3'];
+                    const demoProductIds = ['28dba92d-a56a-4770-87fe-a0213766807d'];
                     for (const productId of demoProductIds) {
                       await addToWishlist(productId);
                     }

@@ -92,26 +92,30 @@ export class FileUploadService {
       if (!file.type.startsWith('image/')) {
         throw new Error('File must be an image');
       }
-
-      const result = await this.uploadFile(file);
-
-      if (!result.success || !result.fileId) {
-        throw new Error(result.error || 'Upload failed');
+  
+      const formData = new FormData();
+      formData.append('image', file);
+  
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/products/upload-image`, {
+        method: 'POST',
+        body: formData,
+      });
+  
+      const result = await response.json();
+  
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Image upload failed');
       }
-
-      // The imageUrl is now directly returned from the backend
-      // The fileId is actually the image URL path
-      const imageUrl = result.fileId.toString();
-
+  
       return {
         success: true,
-        imageUrl
+        imageUrl: result.data.imageUrl,
       };
     } catch (error) {
       console.error('Error uploading image:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Image upload failed'
+        error: error instanceof Error ? error.message : 'Image upload failed',
       };
     }
   }

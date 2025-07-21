@@ -287,7 +287,7 @@ const SecurePaymentForm: React.FC<SecurePaymentFormProps> = ({
         return {
           ...prev,
           [parent]: {
-            ...prev[parent as keyof PaymentFormData],
+            ...(prev[parent as keyof PaymentFormData] as any),
             [child]: value
           }
         };
@@ -361,7 +361,7 @@ const SecurePaymentForm: React.FC<SecurePaymentFormProps> = ({
         timestamp: new Date().toISOString()
       };
 
-      const transaction = await PaymentSecurityService.processPayment(transactionData);
+      const transaction = await PaymentSecurityService.processPayment((transactionData as any).id, transactionData);
 
       // Subscribe to transaction updates
       const unsubscribe = PaymentSecurityService.subscribe((updatedTransaction) => {

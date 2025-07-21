@@ -130,7 +130,7 @@ export const env = {
 
   // Development Configuration
   DEV: {
-    SERVER_PORT: import.meta.env.VITE_DEV_SERVER_PORT || '5173',
+    SERVER_PORT: import.meta.env.VITE_DEV_SERVER_PORT || '8080',
     BACKEND_SERVER_PORT: import.meta.env.VITE_BACKEND_SERVER_PORT || '3001',
     DEBUG_MODE: import.meta.env.VITE_DEBUG_MODE === 'true',
     SHOW_DEBUG_INFO: import.meta.env.VITE_SHOW_DEBUG_INFO === 'true',
@@ -138,8 +138,8 @@ export const env = {
 
   // Production Configuration
   PRODUCTION: {
-    URL: import.meta.env.VITE_PRODUCTION_URL || 'https://manafoods.com',
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.manafoods.com',
+    URL: import.meta.env.VITE_PRODUCTION_URL || 'https://your-app.vercel.app',
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://your-app.vercel.app/api',
   },
 
   // Feature Flags
@@ -204,7 +204,7 @@ export const validateEnv = () => {
 export const getConfig = () => {
   const config = {
     apiUrl: env.isDevelopment() ? 'http://localhost:3001' : env.PRODUCTION.API_BASE_URL,
-    appUrl: env.isDevelopment() ? 'http://localhost:5173' : env.PRODUCTION.URL,
+    appUrl: env.isDevelopment() ? `http://localhost:${env.DEV.SERVER_PORT}` : env.PRODUCTION.URL,
     enableDebug: env.isDevelopment() || env.DEV.DEBUG_MODE,
     enableAnalytics: env.isProduction(),
   };

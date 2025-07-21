@@ -4,7 +4,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import ProductCard from '../components/ProductCard';
 import ProductSearch from '../components/ProductSearch';
-import { mockProducts, fetchProducts } from '../data/products';
+import { fetchProducts } from '../data/products';
+import SEOHead from '../components/SEO/SEOHead';
+import StructuredData from '../components/SEO/StructuredData';
+import { generateCategorySEOTitle, generateCategoryDescription, generateBreadcrumbs } from '../utils/seoUtils';
 import { Search, Grid, List, Filter, SlidersHorizontal } from 'lucide-react';
 
 interface SearchFilters {
@@ -19,7 +22,7 @@ interface SearchFilters {
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [allProducts, setAllProducts] = useState(mockProducts());
+  const [allProducts, setAllProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
@@ -95,8 +98,39 @@ const ProductsPage: React.FC = () => {
     setSearchParams(params);
   };
 
+  // Generate SEO data based on current filters
+  const currentCategory = searchFilters.category !== 'All' ? searchFilters.category : null;
+  const searchQuery = searchFilters.query;
+  
+  const seoTitle = currentCategory 
+    ? generateCategorySEOTitle(currentCategory)
+    : searchQuery 
+      ? `Search Results for "${searchQuery}" | MANAfoods`
+      : 'Premium Food Products - Shop Online | MANAfoods';
+      
+  const seoDescription = currentCategory
+    ? generateCategoryDescription(currentCategory, filteredAndSortedProducts.length)
+    : searchQuery
+      ? `Found ${filteredAndSortedProducts.length} products for "${searchQuery}". Shop premium food products at MANAfoods with fast delivery and best prices.`
+      : 'Shop premium food products at MANAfoods. Browse our complete collection of chicken pickles, mutton pickles, veg pickles, gongura pickles and more. Fast delivery, best prices.';
+
+  const breadcrumbs = generateBreadcrumbs(window.location.pathname, undefined, currentCategory);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <>
+      <SEOHead
+        title={seoTitle}
+        description={seoDescription}
+        keywords={currentCategory ? `${currentCategory.toLowerCase()}, food products, premium ${currentCategory.toLowerCase()}, online grocery, MANAfoods` : 'food products, online grocery, premium food, pickles, gourmet food, MANAfoods'}
+        type="website"
+        canonicalUrl={window.location.href}
+      />
+      
+      <StructuredData
+        breadcrumb={{ items: breadcrumbs }}
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -230,7 +264,9 @@ const ProductsPage: React.FC = () => {
           </Card>
         }
       </div>
-    </div>);
+    </div>
+    </>
+  );
 
 };
 

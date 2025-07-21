@@ -87,7 +87,7 @@ const ChatSupport: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user?.id,
+          userId: user?.ID,
           category,
           userEmail: user?.Email,
           userName: user?.Name
@@ -161,7 +161,7 @@ const ChatSupport: React.FC = () => {
         body: JSON.stringify({
           sessionId: chatSession?.id,
           message: text.trim(),
-          userId: user?.id
+          userId: user?.ID
         })
       });
 

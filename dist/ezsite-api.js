@@ -5,7 +5,7 @@
  */
 
 (function() {
-  const API_BASE_URL = 'http://localhost:3001/api';
+  const API_BASE_URL = window.VITE_API_BASE_URL || 'http://localhost:3001/api';
   console.log('🔧 EzSite API Client - Connecting to:', API_BASE_URL);
 
   // Initialize the ezsite object if it doesn't exist
@@ -14,14 +14,29 @@
   // Define the APIs
   window.ezsite.apis = {
     // Authentication APIs
-    login: async (email, password) => {
+    login: async (emailOrObject, password) => {
       try {
+        let email, pass;
+        
+        // Handle both object and separate parameter calls
+        if (typeof emailOrObject === 'object' && emailOrObject !== null) {
+          email = emailOrObject.email;
+          pass = emailOrObject.password;
+        } else {
+          email = emailOrObject;
+          pass = password;
+        }
+        
+        if (!email || !pass) {
+          return { success: false, error: 'Email and password are required' };
+        }
+        
         const response = await fetch(`${API_BASE_URL}/auth/login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password: pass })
         });
         
         const result = await response.json();
@@ -38,14 +53,31 @@
       }
     },
 
-    register: async (email, password, name) => {
+    register: async (emailOrObject, password, name) => {
       try {
+        let email, pass, userName;
+        
+        // Handle both object and separate parameter calls
+        if (typeof emailOrObject === 'object' && emailOrObject !== null) {
+          email = emailOrObject.email;
+          pass = emailOrObject.password;
+          userName = emailOrObject.name;
+        } else {
+          email = emailOrObject;
+          pass = password;
+          userName = name;
+        }
+        
+        if (!email || !pass) {
+          return { success: false, error: 'Email and password are required' };
+        }
+        
         const response = await fetch(`${API_BASE_URL}/auth/register`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ email, password, name })
+          body: JSON.stringify({ email, password: pass, name: userName })
         });
         
         const result = await response.json();
@@ -275,6 +307,22 @@
       } catch (error) {
         console.error('File upload error:', error);
         return { data: null, error: error.message || 'Failed to upload file' };
+      }
+    },
+
+    // Email sending method (mock implementation for demo)
+    sendEmail: async (emailData) => {
+      try {
+        // Mock implementation - in a real app, this would call an email service
+        console.log('Email would be sent:', emailData);
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        return { success: true, data: 'Email sent successfully' };
+      } catch (error) {
+        console.error('Email sending error:', error);
+        return { success: false, error: error.message || 'Failed to send email' };
       }
     }
   };

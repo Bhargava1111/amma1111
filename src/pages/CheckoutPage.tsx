@@ -11,6 +11,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, ArrowLeft } from 'lucide-react';
 import { OrderService } from '../services/OrderService';
+import { PaymentService } from '../services/PaymentService';
+import { env } from '../config/env'; // Import env
 
 // PIN code to city/state mapping for major Indian cities
 const PIN_CODE_DATABASE: { [key: string]: { city: string; state: string } } = {
@@ -403,6 +405,7 @@ const CheckoutPage: React.FC = () => {
   const [shippingInfo, setShippingInfo] = useState({
     fullName: user?.Name || '',
     email: user?.Email || '',
+    phone: user?.PhoneNumber || '',
     address: '',
     city: '',
     state: '',
@@ -410,13 +413,24 @@ const CheckoutPage: React.FC = () => {
     country: 'India'
   });
 
-  // Convert prices to rupees (assuming 1 USD = 83 INR approximately)
-  const convertToRupees = (dollarAmount: number) => dollarAmount * 83;
-  
-  const totalPriceInRupees = convertToRupees(totalPrice);
+  // Convert price to rupees (prices are already in INR)
+  const convertToRupees = (price: number): number => {
+    return price; // Already in INR
+  };
+
+  // Prices are already in INR, no conversion needed
+  const totalPriceInRupees = totalPrice;
   const shipping = totalPriceInRupees > 999 ? 0 : 99; // Free shipping over ₹999, otherwise ₹99
   const tax = totalPriceInRupees * 0.18; // 18% GST in India
   const finalTotal = totalPriceInRupees + shipping + tax;
+  
+  console.log('Checkout calculations:', {
+    totalPrice,
+    totalPriceInRupees,
+    shipping,
+    tax,
+    finalTotal
+  });
 
   // Get cities for selected state
   const getCitiesForState = (state: string) => {
@@ -482,7 +496,19 @@ const CheckoutPage: React.FC = () => {
     setLoading(true);
 
     try {
-      // 1. Create an order on your backend (OrderService)
+      // Validate payment amount
+      const amountValidation = PaymentService.validateAmount(finalTotal);
+      if (!amountValidation.valid) {
+        throw new Error(amountValidation.error);
+      }
+
+      // Show processing message
+      toast({
+        title: "Processing Payment",
+        description: "Preparing your order for payment...",
+      });
+
+      // 1. Create an order using OrderService (this creates internal order and Razorpay order)
       const orderResponse = await OrderService.createRazerPayOrder({
         amount: finalTotal,
         currency: 'INR',
@@ -493,98 +519,79 @@ const CheckoutPage: React.FC = () => {
       });
 
       if (!orderResponse.success || !orderResponse.razerpayOrderId) {
-        throw new Error(orderResponse.message || 'Failed to create Razorpay order.');
+        throw new Error(orderResponse.message || 'Failed to create order.');
       }
 
-      const options = {
-        key: import.meta.env.VITE_RAZERPAY_KEY_ID || 'rzp_test_demo_key',
-        amount: Math.round(finalTotal * 100), // Amount in paise
+      // 2. Use PaymentService to handle the payment flow
+      await PaymentService.openCheckout({
+        amount: finalTotal,
         currency: 'INR',
-        name: 'MANAfoods',
-        description: 'Purchase from MANAfoods - Traditional Indian Pickles',
-        order_id: orderResponse.razerpayOrderId,
-        handler: async (response: any) => {
-          // 2. Verify payment on your backend
-          const verificationResponse = await OrderService.verifyRazerPayPayment({
-            razerpay_payment_id: response.razerpay_payment_id,
-            razerpay_order_id: response.razerpay_order_id,
-            razerpay_signature: response.razerpay_signature,
-            orderId: orderResponse.orderId,
-          });
-
-          if (verificationResponse.success) {
-            clearCart();
-            toast({
-              title: "Order Placed Successfully!",
-              description: `Your order #${orderResponse.orderId} has been confirmed.`
+        orderId: orderResponse.razerpayOrderId,
+        customerInfo: {
+          name: shippingInfo.fullName,
+          email: shippingInfo.email,
+          phone: user.PhoneNumber || shippingInfo.phone || ''
+        },
+        orderItems: items,
+        shippingAddress: shippingInfo,
+        onSuccess: async (response) => {
+          try {
+            // 3. Verify payment
+            const verificationResponse = await OrderService.verifyRazerPayPayment({
+              razerpay_payment_id: response.razorpay_payment_id,
+              razerpay_order_id: response.razorpay_order_id,
+              razerpay_signature: response.razorpay_signature,
+              orderId: orderResponse.orderId,
             });
-            navigate(`/order-confirmation/${orderResponse.orderId}`);
-          } else {
+
+            if (verificationResponse.success) {
+              clearCart();
+              toast({
+                title: "Order Placed Successfully! 🎉",
+                description: `Your order #${orderResponse.orderId} has been confirmed and is being processed.`
+              });
+              navigate(`/order-confirmation/${orderResponse.orderId}`);
+            } else {
+              toast({
+                title: "Payment Verification Failed",
+                description: verificationResponse.message || "Payment could not be verified. Please contact support.",
+                variant: "destructive"
+              });
+            }
+          } catch (verifyError: any) {
+            console.error('Payment verification error:', verifyError);
             toast({
-              title: "Payment Failed",
-              description: verificationResponse.message || "Payment verification failed. Please try again.",
+              title: "Verification Error",
+              description: verifyError.message || "Failed to verify payment. Please contact support.",
               variant: "destructive"
             });
           }
         },
-        prefill: {
-          name: shippingInfo.fullName,
-          email: shippingInfo.email,
-          contact: user.PhoneNumber || '',
-        },
-        notes: {
-          address: shippingInfo.address,
-        },
-        theme: {
-          color: '#3399CC',
-        },
-      };
-
-      // Check if Razorpay is loaded or if we're using demo keys
-      const isDemoMode = !window.Razorpay || !import.meta.env.VITE_RAZERPAY_KEY_ID || import.meta.env.VITE_RAZERPAY_KEY_ID === 'rzp_test_demo_key';
-      
-      if (isDemoMode) {
-        // For demo purposes, simulate successful payment
-        console.log('Demo mode: Simulating payment process...');
-        
-        toast({
-          title: "Demo Payment Mode",
-          description: "Simulating payment process for demo. Order will be created automatically.",
-        });
-        
-        setTimeout(() => {
-          // Simulate successful payment response
-          const mockResponse = {
-            razorpay_payment_id: `pay_demo_${Date.now()}`,
-            razorpay_order_id: orderResponse.razerpayOrderId,
-            razorpay_signature: `sig_demo_${Date.now()}`
-          };
+        onFailure: (error) => {
+          console.error('Payment failed:', error);
           
-          // Call the success handler directly
-          options.handler(mockResponse);
-        }, 2000);
-        
-        return;
-      }
-
-      // Use real Razorpay if available and configured
-      const rzp1 = new window.Razorpay(options);
-      rzp1.on('payment.failed', (response: any) => {
-        toast({
-          title: "Payment Failed",
-          description: response.error.description || "Payment failed. Please try again.",
-          variant: "destructive"
-        });
-        console.error('Razorpay Error:', response.error);
+          if (error.message?.includes('cancelled')) {
+            toast({
+              title: "Payment Cancelled",
+              description: "You cancelled the payment. Your order has not been placed.",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "Payment Failed",
+              description: error.message || "Payment failed. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }
       });
-      rzp1.open();
     } catch (error: any) {
+      console.error('Payment initiation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to initiate payment. Please try again.",
         variant: "destructive"
       });
-      console.error('Payment initiation error:', error);
     } finally {
       setLoading(false);
     }

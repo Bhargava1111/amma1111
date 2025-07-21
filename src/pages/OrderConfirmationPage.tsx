@@ -202,7 +202,7 @@ const OrderConfirmationPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-900">
-                          ${(item.product_price * item.quantity).toFixed(2)}
+                          ₹{(item.product_price * item.quantity * 83).toFixed(0)}
                         </p>
                       </div>
                     </div>
@@ -269,7 +269,7 @@ const OrderConfirmationPage: React.FC = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Subtotal</span>
-                    <span className="font-medium">${order.order_total.toFixed(2)}</span>
+                    <span className="font-medium">₹{(order.order_total).toFixed(0)}</span>
                   </div>
                   {/* Shipping and Tax might need to be calculated or fetched if not stored directly */}
                   {/* For now, using placeholders or simplified calculation */}
@@ -277,14 +277,14 @@ const OrderConfirmationPage: React.FC = () => {
                     <span className="text-gray-600">Shipping</span>
                     <span className="font-medium">
                        {/* Assuming shipping is included in total or calculated */}
-                       $0.00 {/* Placeholder */}
+                       Free {/* Placeholder */}
                     </span>
                   </div>
                    <div className="flex justify-between">
                     <span className="text-gray-600">Tax</span>
                     <span className="font-medium">
                        {/* Assuming tax is included in total or calculated */}
-                       $0.00 {/* Placeholder */}
+                       ₹{(order.order_total * 0.18).toFixed(0)} {/* GST 18% */}
                     </span>
                   </div>
                 </div>
@@ -293,7 +293,7 @@ const OrderConfirmationPage: React.FC = () => {
 
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span>${order.order_total.toFixed(2)}</span>
+                  <span>₹{(order.order_total * 1.18).toFixed(0)}</span>
                 </div>
               </CardContent>
             </Card>
@@ -302,7 +302,7 @@ const OrderConfirmationPage: React.FC = () => {
             <Card>
               <CardContent className="p-6 space-y-4">
                 <Button asChild className="w-full">
-                  <Link to={`/orders?trackingNumber=${order.tracking_number}`}>
+                  <Link to={`/orders/${order.tracking_number}`}>
                     <Package className="w-4 h-4 mr-2" />
                     Track Your Order
                   </Link>

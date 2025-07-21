@@ -2,6 +2,8 @@ import { CartItem } from '../contexts/CartContext';
 import { EmailService } from './EmailService';
 import { InvoiceService } from './InvoiceService';
 import { WhatsAppService } from './WhatsAppService';
+import { AutoInvoiceService } from './AutoInvoiceService';
+import { env } from '../config/env'; // Import env
 
 const ORDERS_TABLE_ID = '10401';
 const ORDER_ITEMS_TABLE_ID = 'order_items';
@@ -20,7 +22,7 @@ const ADMIN_CONFIG = {
 };
 
 export interface Order {
-  id: number;
+  id: string;
   user_id: string;
   order_total: number;
   order_status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
@@ -36,7 +38,7 @@ export interface Order {
 }
 
 export interface OrderItem {
-  id: number;
+  id: string;
   order_id: string;
   product_id: string;
   product_name: string;
@@ -81,6 +83,11 @@ export class OrderService {
         id: orderId
       };
 
+      // Defensive: Ensure tracking_number is always set
+      if (!orderDataWithId.tracking_number) {
+        orderDataWithId.tracking_number = `TN${Date.now().toString().slice(-8)}`;
+      }
+
       console.log(`OrderService: Creating order in table ${ORDERS_TABLE_ID} with data:`, orderDataWithId);
       const { error: orderError } = await window.ezsite.apis.tableCreate(ORDERS_TABLE_ID, orderDataWithId);
       if (orderError) {
@@ -91,7 +98,6 @@ export class OrderService {
 
       // Use the orderId we generated instead of fetching
       const createdOrder = {
-        id: orderId,
         ...orderDataWithId
       };
 
@@ -233,82 +239,82 @@ export class OrderService {
       
       console.log('OrderService: Admin notification process completed.');
 
-      // Generate invoice and send email notifications
-      console.log(`OrderService: Generating invoice and sending email notifications for order ${createdOrder.id}`);
+      // Auto-generate and deliver invoice with complete notification system
+      console.log(`OrderService: Auto-generating invoice and notifications for order ${createdOrder.id}`);
       try {
-        // Get customer info (in real app, this would come from user profile)
+        // Get customer info from shipping address and user data
         const customerInfo = {
-          name: `Customer ${userId}`,
-          email: `customer${userId}@example.com`, // In real app, get from user profile
-          phone: '',
+          name: shippingAddress?.fullName || `Customer ${userId}`,
+          email: shippingAddress?.email || `customer${userId}@example.com`,
+          phone: shippingAddress?.phone || shippingAddress?.phoneNumber || '+919390872628',
+          address: shippingAddress,
+          userId: userId
         };
 
-        // Create invoice from order
-        const invoice = await InvoiceService.createInvoiceFromOrder(
-          createdOrder,
+        // Use AutoInvoiceService to handle complete invoice generation and delivery
+        const autoInvoiceResult = await AutoInvoiceService.generateAndDeliverInvoice(
+          createdOrder as Order,
           cartItems.map(item => ({
+            id: `${createdOrder.id}_${item.id}_${Date.now()}`,
+            order_id: createdOrder.id,
             product_id: item.id,
             product_name: item.name,
             product_price: item.price,
             quantity: item.quantity,
             product_image: item.image
           })),
-          customerInfo
+          customerInfo,
+          {
+            sendEmail: true,
+            sendWhatsApp: true,
+            createNotification: true,
+            priority: orderTotal >= 100 ? 'high' : 'normal',
+            includeTrackingInfo: true,
+            emailTemplate: 'standard'
+          }
         );
 
-        console.log(`OrderService: Invoice ${invoice.invoice_number} created successfully`);
-
-        // Generate PDF invoice
-        const invoicePDF = await InvoiceService.generateInvoicePDF(invoice);
-        console.log(`OrderService: Invoice PDF generated successfully`);
-
-        // Send order confirmation email with invoice to customer
-        const orderWithItems = { ...createdOrder, items: cartItems };
-        const customerEmailResult = await EmailService.sendOrderConfirmation(orderWithItems, customerInfo.email);
-        
-        if (customerEmailResult.success) {
-          console.log('OrderService: Order confirmation email sent to customer successfully');
-        } else {
-          console.error('OrderService: Failed to send order confirmation email:', customerEmailResult.error);
-        }
-
-        // Send invoice email to customer
-        const invoiceEmailResult = await EmailService.sendInvoiceEmail(invoice, customerInfo.email, invoicePDF);
-        
-        if (invoiceEmailResult.success) {
-          console.log('OrderService: Invoice email sent to customer successfully');
-        } else {
-          console.error('OrderService: Failed to send invoice email:', invoiceEmailResult.error);
-        }
-
-        // Send WhatsApp notifications
-        console.log('OrderService: Sending WhatsApp notifications');
-        try {
-          // Get customer phone number (you might need to get this from user profile)
-          const customerPhone = shippingAddress?.phone || shippingAddress?.phoneNumber || '+919390872628'; // Default for demo
+        if (autoInvoiceResult.success) {
+          console.log(`OrderService: Auto-invoice generation completed successfully for invoice ${autoInvoiceResult.invoiceNumber}`);
           
-          // Send order confirmation via WhatsApp
-          const whatsappOrderResult = await WhatsAppService.sendOrderConfirmation(orderWithItems, customerPhone);
-          if (whatsappOrderResult.success) {
-            console.log('OrderService: WhatsApp order confirmation sent successfully');
-          } else {
-            console.error('OrderService: Failed to send WhatsApp order confirmation:', whatsappOrderResult.error);
-          }
-
-          // Send invoice notification via WhatsApp
-          const whatsappInvoiceResult = await WhatsAppService.sendInvoiceNotification(invoice, customerPhone);
-          if (whatsappInvoiceResult.success) {
-            console.log('OrderService: WhatsApp invoice notification sent successfully');
-          } else {
-            console.error('OrderService: Failed to send WhatsApp invoice notification:', whatsappInvoiceResult.error);
-          }
-        } catch (whatsappError) {
-          console.error('OrderService: WhatsApp notification error:', whatsappError);
+          // Log delivery results
+          const deliveryResults = autoInvoiceResult.deliveryResults;
+          console.log('OrderService: Delivery Summary:', {
+            email: deliveryResults.email?.success ? 'Sent' : `Failed: ${deliveryResults.email?.error}`,
+            whatsapp: deliveryResults.whatsapp?.success ? 'Sent' : `Failed: ${deliveryResults.whatsapp?.error}`,
+            notification: deliveryResults.notification?.success ? 'Created' : `Failed: ${deliveryResults.notification?.error}`
+          });
+          
+          // Update order with invoice reference
+          await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
+            id: createdOrder.id,
+            invoice_id: autoInvoiceResult.invoiceId,
+            invoice_number: autoInvoiceResult.invoiceNumber,
+            auto_invoice_status: 'completed',
+            updated_at: new Date().toISOString()
+          });
+          
+        } else {
+          console.error('OrderService: Auto-invoice generation failed:', autoInvoiceResult.error);
+          
+          // Update order with failure status
+          await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
+            id: createdOrder.id,
+            auto_invoice_status: 'failed',
+            auto_invoice_error: autoInvoiceResult.error,
+            updated_at: new Date().toISOString()
+          });
+          
+          // Fallback to basic notifications
+          await this.sendFallbackNotifications(createdOrder, cartItems, customerInfo);
         }
 
         // Send enhanced admin notification email with retry logic
         const adminEmails = ADMIN_CONFIG.ADMIN_EMAILS;
         console.log('OrderService: Attempting to send enhanced admin notification email to:', adminEmails);
+        
+        // Prepare order with items for email notification
+        const orderWithItems = { ...createdOrder, items: cartItems };
         
         const adminEmailResult = await EmailService.sendEnhancedAdminOrderNotification(
           orderWithItems, 
@@ -353,15 +359,7 @@ export class OrderService {
           }
         }
 
-        // Update order with invoice reference
-        await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
-          id: createdOrder.id,
-          invoice_id: invoice.id,
-          invoice_number: invoice.invoice_number,
-          updated_at: new Date().toISOString()
-        });
-
-        console.log('OrderService: Order updated with invoice reference');
+        console.log('OrderService: Auto-invoice integration completed successfully');
 
       } catch (emailInvoiceError) {
         console.error('OrderService: Error with email/invoice generation:', emailInvoiceError);
@@ -410,7 +408,7 @@ export class OrderService {
       return {
         success: true,
         orderId: orderId,
-        trackingNumber: orderDataWithId.tracking_number
+        trackingNumber: orderDataWithId.tracking_number || `TN${Date.now().toString().slice(-8)}`
       };
     } catch (error) {
       console.error('Error creating order:', error);
@@ -418,7 +416,7 @@ export class OrderService {
     }
   }
 
-  // Method to create a Razorpay order (simplified for demo)
+  // Method to create a Razorpay order (integrated with backend)
   static async createRazerPayOrder(params: {
     amount: number;
     currency: string;
@@ -446,20 +444,47 @@ export class OrderService {
 
       const internalOrderId = createOrderResult.orderId;
 
-      // For demo purposes, create a mock Razorpay order ID
-      const mockRazorpayOrderId = `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
       console.log(`OrderService: Creating Razorpay order for internal order ID ${internalOrderId}`);
       
-      // Update the internal order with the mock Razorpay Order ID
+      // Create Razorpay order via backend API
+      const razorpayResponse = await fetch('/api/razerpay/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: Math.round(amount * 100), // Convert to paise
+          currency: currency,
+          receipt: receipt,
+          notes: {
+            order_id: internalOrderId,
+            user_id: userId,
+            items_count: cartItems.length
+          }
+        })
+      });
+
+      if (!razorpayResponse.ok) {
+        throw new Error(`HTTP error! status: ${razorpayResponse.status}`);
+      }
+
+      const razorpayData = await razorpayResponse.json();
+      
+      if (!razorpayData.success) {
+        throw new Error(razorpayData.error || 'Failed to create Razorpay order');
+      }
+
+      const razorpayOrderId = razorpayData.data.id;
+      
+      // Update the internal order with the Razorpay Order ID
       await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
         id: internalOrderId,
-        razerpay_order_id: mockRazorpayOrderId,
+        razerpay_order_id: razorpayOrderId,
       });
 
       return {
         success: true,
-        razerpayOrderId: mockRazorpayOrderId,
+        razerpayOrderId: razorpayOrderId,
         orderId: internalOrderId, // Return your internal order ID
         message: 'Razorpay order created successfully.'
       };
@@ -469,42 +494,85 @@ export class OrderService {
     }
   }
 
-  // Method to verify Razorpay payment (simplified for demo)
+  // Method to verify Razorpay payment (integrated with backend)
   static async verifyRazerPayPayment(params: {
     razerpay_payment_id: string;
     razerpay_order_id: string;
     razerpay_signature: string;
-    orderId: number; // Your internal order ID
+    orderId: string; // Your internal order ID
   }) {
     try {
       const { razerpay_payment_id, razerpay_order_id, razerpay_signature, orderId } = params;
 
       console.log(`OrderService: Verifying Razorpay payment for internal order ID ${orderId}`);
+      console.log(`OrderService: Payment details:`, { razerpay_payment_id, razerpay_order_id, razerpay_signature });
       
-      // For demo purposes, simulate successful payment verification
-      // In a real app, you would verify the signature using Razorpay's webhook secret
-      const isVerified = razerpay_payment_id && razerpay_order_id && razerpay_signature;
+      // Verify payment via backend API
+      const verifyResponse = await fetch('/api/razerpay/verify-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          razerpay_payment_id,
+          razerpay_order_id,
+          razerpay_signature,
+          internal_order_id: orderId
+        })
+      });
 
-      if (isVerified) {
-        // Update internal order status to 'processing' and store payment ID
-        await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
+      if (!verifyResponse.ok) {
+        throw new Error(`HTTP error! status: ${verifyResponse.status}`);
+      }
+
+      const verifyData = await verifyResponse.json();
+      
+      if (!verifyData.success) {
+        console.error('Payment verification failed:', verifyData.error);
+        // Update order status to failed
+        try {
+          await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
+            id: orderId,
+            order_status: 'failed',
+          });
+        } catch (updateError) {
+          console.error(`OrderService: Exception updating order ${orderId} to failed:`, updateError);
+        }
+        return { success: false, message: verifyData.error || 'Payment verification failed' };
+      }
+
+      // Payment verified successfully, update order status
+      try {
+        const updateResult = await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
           id: orderId,
           order_status: 'processing',
           razerpay_payment_id: razerpay_payment_id,
         });
+        
+        if (updateResult.error) {
+          console.error(`OrderService: Error updating order ${orderId}:`, updateResult.error);
+          return { success: false, message: `Failed to update order: ${updateResult.error}` };
+        }
+        
         console.log(`OrderService: Payment verified and internal order ${orderId} updated to 'processing'.`);
         return { success: true, message: 'Payment verified successfully.' };
-      } else {
-        // Update internal order status to 'failed' if verification fails
-        await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
-          id: orderId,
-          order_status: 'failed',
-        });
-        console.error(`OrderService: Payment verification failed for internal order ${orderId}.`);
-        return { success: false, message: 'Payment verification failed.' };
+      } catch (updateError) {
+        console.error(`OrderService: Exception updating order ${orderId}:`, updateError);
+        return { success: false, message: `Failed to update order: ${updateError}` };
       }
     } catch (error: any) {
       console.error('Error verifying Razorpay payment:', error);
+      
+      // In case of network error, try to update order status to failed
+      try {
+        await window.ezsite.apis.tableUpdate(ORDERS_TABLE_ID, {
+          id: params.orderId,
+          order_status: 'failed',
+        });
+      } catch (updateError) {
+        console.error(`OrderService: Exception updating order ${params.orderId} to failed:`, updateError);
+      }
+      
       return { success: false, message: error.message || 'An unknown error occurred during verification.' };
     }
   }
@@ -619,6 +687,9 @@ export class OrderService {
 
   static async trackOrder(trackingNumber: string) {
     try {
+      if (!trackingNumber) {
+        throw new Error('Invalid tracking number.');
+      }
       if (!window.ezsite || !window.ezsite.apis) {
         throw new Error('API client not initialized. Please refresh the page.');
       }
@@ -796,6 +867,99 @@ export class OrderService {
     } catch (error) {
       console.error('Error updating order status:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Send fallback notifications when AutoInvoiceService fails
+   */
+  private static async sendFallbackNotifications(order: any, cartItems: CartItem[], customerInfo: any): Promise<void> {
+    try {
+      console.log('OrderService: Sending fallback notifications for order:', order.id);
+      
+      // Basic order confirmation email
+      try {
+        const emailResult = await EmailService.sendEmail({
+          to: customerInfo.email,
+          subject: `Order Confirmation - ${order.id} - MANAfoods`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1>Order Confirmation</h1>
+              <p>Dear ${customerInfo.name},</p>
+              <p>Thank you for your order! Your order has been received and is being processed.</p>
+              
+              <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h2>Order Details</h2>
+                <p><strong>Order ID:</strong> ${order.id}</p>
+                <p><strong>Order Total:</strong> ₹${order.order_total.toFixed(2)}</p>
+                <p><strong>Order Date:</strong> ${new Date(order.order_date).toLocaleString()}</p>
+                <p><strong>Payment Method:</strong> ${order.payment_method}</p>
+              </div>
+              
+              <h3>Items Ordered:</h3>
+              <ul>
+                ${cartItems.map(item => `
+                  <li>${item.name} - Qty: ${item.quantity} - ₹${(item.price * item.quantity).toFixed(2)}</li>
+                `).join('')}
+              </ul>
+              
+              <p>We will send you a detailed invoice and tracking information shortly.</p>
+              <p>Thank you for choosing MANAfoods!</p>
+            </div>
+          `
+        });
+        
+        if (emailResult.success) {
+          console.log('OrderService: Fallback order confirmation email sent successfully');
+        } else {
+          console.error('OrderService: Failed to send fallback email:', emailResult.error);
+        }
+      } catch (emailError) {
+        console.error('OrderService: Fallback email error:', emailError);
+      }
+      
+      // Basic WhatsApp notification
+      try {
+        const message = `🛒 *Order Confirmed!*\n\nHello ${customerInfo.name},\n\nYour order #${order.id} has been confirmed.\n\n💰 *Total:* ₹${order.order_total.toFixed(2)}\n📅 *Date:* ${new Date(order.order_date).toLocaleString()}\n💳 *Payment:* ${order.payment_method}\n\nWe will send you invoice and tracking details shortly.\n\nThank you for choosing MANAfoods! 🙏`;
+        
+        const whatsappResult = await WhatsAppService.sendTextMessage(customerInfo.phone, message);
+        
+        if (whatsappResult.success) {
+          console.log('OrderService: Fallback WhatsApp notification sent successfully');
+        } else {
+          console.error('OrderService: Failed to send fallback WhatsApp:', whatsappResult.error);
+        }
+      } catch (whatsappError) {
+        console.error('OrderService: Fallback WhatsApp error:', whatsappError);
+      }
+      
+      // Basic in-app notification
+      try {
+        await window.ezsite.apis.tableCreate(NOTIFICATIONS_TABLE_ID, {
+          user_id: customerInfo.userId,
+          title: '🛒 Order Confirmed',
+          message: `Your order #${order.id} has been confirmed and is being processed. Total: ₹${order.order_total.toFixed(2)}`,
+          type: 'order',
+          channel: 'in_app',
+          status: 'sent',
+          is_read: false,
+          priority: 'normal',
+          metadata: JSON.stringify({
+            order_id: order.id,
+            order_total: order.order_total,
+            fallback_notification: true
+          }),
+          created_at: new Date().toISOString(),
+          sent_at: new Date().toISOString()
+        });
+        
+        console.log('OrderService: Fallback in-app notification created successfully');
+      } catch (notificationError) {
+        console.error('OrderService: Fallback notification error:', notificationError);
+      }
+      
+    } catch (error) {
+      console.error('OrderService: Error in fallback notifications:', error);
     }
   }
 }

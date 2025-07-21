@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { EmailService } from '../services/EmailService';
+import SEOHead from '../components/SEO/SEOHead';
+import StructuredData from '../components/SEO/StructuredData';
+import { generateBreadcrumbs, generateLocalBusinessStructuredData } from '../utils/seoUtils';
 import {
   Mail,
   Phone,
@@ -133,8 +136,30 @@ const ContactPage: React.FC = () => {
   }];
 
 
+  const breadcrumbs = generateBreadcrumbs('/contact');
+  const localBusinessData = generateLocalBusinessStructuredData();
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
+      <SEOHead
+        title="Contact Us - Get in Touch | MANAfoods"
+        description="Contact MANAfoods for questions about our premium food products, orders, or support. Phone: +91 98765 43210, Email: support@manaeats.com. We're here to help!"
+        keywords="contact MANAfoods, customer support, food products help, order assistance, MANAfoods phone number, MANAfoods email, customer service"
+        type="website"
+      />
+      
+      <StructuredData
+        breadcrumb={{ items: breadcrumbs }}
+      />
+      
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessData)
+        }}
+      />
+      
+      <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
@@ -237,8 +262,8 @@ const ContactPage: React.FC = () => {
                 <CardTitle>Get in Touch</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {contactInfo.map((info, index) =>
-                <div key={index} className="flex items-start space-x-3">
+                {contactInfo.map((info, index) => (
+                  <div key={index} className="flex items-start space-x-3">
                     <div className="flex-shrink-0 mt-1">
                       {info.icon}
                     </div>
@@ -254,7 +279,7 @@ const ContactPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                )}
+                ))}
               </CardContent>
             </Card>
 
@@ -295,8 +320,8 @@ const ContactPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {supportCategories.map((category, index) =>
-            <Card key={index} className="text-center hover:shadow-lg transition-shadow cursor-pointer group">
+            {supportCategories.map((category, index) => (
+              <Card key={index} className="text-center hover:shadow-lg transition-shadow cursor-pointer group">
                 <CardContent className="p-6">
                   <div className="flex justify-center mb-4 group-hover:scale-110 transition-transform">
                     {category.icon}
@@ -309,7 +334,7 @@ const ContactPage: React.FC = () => {
                   </p>
                 </CardContent>
               </Card>
-            )}
+            ))}
           </div>
         </div>
 
@@ -351,8 +376,9 @@ const ContactPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>);
-
+    </div>
+    </>
+  );
 };
 
 export default ContactPage;

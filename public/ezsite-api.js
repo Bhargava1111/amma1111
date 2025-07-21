@@ -5,7 +5,7 @@
  */
 
 (function() {
-  const API_BASE_URL = 'http://localhost:3001/api';
+  const API_BASE_URL = window.VITE_API_BASE_URL || 'http://localhost:3001/api';
   console.log('🔧 EzSite API Client - Connecting to:', API_BASE_URL);
 
   // Initialize the ezsite object if it doesn't exist

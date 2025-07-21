@@ -88,7 +88,7 @@ export class EmailService {
               ${orderData.items?.map((item: any) => `
                 <div class="item">
                   <span>${item.product_name} (x${item.quantity})</span>
-                  <span>$${(item.product_price * item.quantity).toFixed(2)}</span>
+                  <span>₹{(item.product_price * item.quantity).toFixed(2)}</span>
                 </div>
               `).join('') || '<p>Item details will be updated shortly.</p>'}
               
@@ -289,8 +289,8 @@ export class EmailService {
                         ${item.description ? `<br><small style="color: #6b7280;">${item.description}</small>` : ''}
                       </td>
                       <td>${item.quantity}</td>
-                      <td>$${(item.product_price || item.price).toFixed(2)}</td>
-                      <td><strong>$${((item.product_price || item.price) * item.quantity).toFixed(2)}</strong></td>
+                      <td>₹{(item.product_price || item.price).toFixed(2)}</td>
+<td><strong>₹{((item.product_price || item.price) * item.quantity).toFixed(2)}</strong></td>
                     </tr>
                   `).join('')}
                 </tbody>
@@ -429,6 +429,18 @@ This order requires immediate attention. Please process within the next 2 hours.
         ...emailData,
         from: `${ADMIN_EMAIL_CONFIG.SENDER_NAME} <${ADMIN_EMAIL_CONFIG.SENDER_EMAIL}>`
       };
+
+      // Debug attachments if present
+      if (emailPayload.attachments && emailPayload.attachments.length > 0) {
+        console.log('EmailService: Sending email with attachments:', {
+          attachmentCount: emailPayload.attachments.length,
+          attachments: emailPayload.attachments.map(att => ({
+            filename: att.filename,
+            contentType: att.contentType,
+            contentLength: att.content ? att.content.length : 0
+          }))
+        });
+      }
 
       const response = await fetch('/api/send-email', {
         method: 'POST',
@@ -625,6 +637,16 @@ This order requires immediate attention. Please take action promptly.
   ): Promise<{ success: boolean; error?: string }> {
     const template = this.templates.invoiceEmail(invoiceData);
     
+    // Convert Uint8Array to base64 string for JSON serialization
+    const base64Content = btoa(String.fromCharCode(...pdfData));
+    
+    console.log('EmailService: PDF attachment debug:', {
+      originalPdfLength: pdfData.length,
+      base64Length: base64Content.length,
+      isBase64: /^[A-Za-z0-9+/]*={0,2}$/.test(base64Content),
+      base64Preview: base64Content.substring(0, 50) + '...'
+    });
+    
     return this.sendEmail({
       to: customerEmail,
       subject: template.subject,
@@ -633,7 +655,7 @@ This order requires immediate attention. Please take action promptly.
       attachments: [
         {
           filename: `invoice-${invoiceData.invoice_number}.pdf`,
-          content: pdfData,
+          content: base64Content,
           contentType: 'application/pdf'
         }
       ]

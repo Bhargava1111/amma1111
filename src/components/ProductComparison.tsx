@@ -81,14 +81,8 @@ const ProductComparison: React.FC<ProductComparisonProps> = ({ isOpen, onClose }
   };
 
   const getFeaturesList = (product: Product) => {
-    // Mock features for comparison
-    return [
-    'Traditional Recipe',
-    'No Preservatives',
-    'Authentic Taste',
-    'Home-made Style',
-    'Long Shelf Life'];
-
+    // Use product.features from backend
+    return product.features || [];
   };
 
   if (comparedProducts.length === 0) {

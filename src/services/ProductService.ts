@@ -50,19 +50,15 @@ export class ProductService {
       }
 
       const response = await fetch(`/api/products?${queryParams.toString()}`);
-      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error('Failed to fetch products');
       }
-
-      const result = await response.json();
-      
+      const data = await response.json();
       return {
-        products: result.data || [],
-        totalCount: result.total || 0,
-        currentPage: pageNo,
-        totalPages: Math.ceil((result.total || 0) / pageSize)
+        products: data.data,
+        totalCount: data.total,
+        currentPage: data.page,
+        totalPages: data.totalPages,
       };
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -295,4 +291,3 @@ export class ProductService {
     }
   }
 }
-

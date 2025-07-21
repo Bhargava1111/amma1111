@@ -210,7 +210,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">#{order.id}</TableCell>
                     <TableCell>{order.user_id}</TableCell>
-                    <TableCell>${order.order_total.toFixed(2)}</TableCell>
+                    <TableCell>₹{order.order_total.toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusBadgeClass(order.order_status)}`}>
                         {order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}
@@ -309,7 +309,7 @@ const OrderManagement: React.FC<OrderManagementProps> = () => {
                       <TableRow key={item.id}>
                         <TableCell>{item.product_name}</TableCell>
                         <TableCell>{item.quantity}</TableCell>
-                        <TableCell className="text-right">${item.product_price.toFixed(2)}</TableCell>
+                        <TableCell className="text-right">₹{item.product_price.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

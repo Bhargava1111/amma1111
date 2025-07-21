@@ -140,7 +140,6 @@ const ProductManagement: React.FC = () => {
   const loadCategories = async () => {
     try {
       const result = await ProductService.getCategories();
-      console.log('Categories loaded:', result); // Debug log
       if (result && result.data && Array.isArray(result.data)) {
         // Extract category names from the result
         const categoryNames = result.data.map(cat => 
@@ -150,12 +149,10 @@ const ProductManagement: React.FC = () => {
       } else if (Array.isArray(result)) {
         setCategories(result as string[]);
       } else {
-        // Fallback static categories
-        setCategories(['Veg Pickles', 'Non Veg Pickles', 'Spicy Pickles', 'Sweet Pickles', 'Gongura Pickles', 'Chicken Pickles', 'Mutton Pickles', 'Fish Pickles', 'Mixed Pickles']);
+        setCategories([]); // Show empty state if backend fails
       }
     } catch (error) {
-      // Fallback static categories on error
-      setCategories(['Veg Pickles', 'Non Veg Pickles', 'Spicy Pickles', 'Sweet Pickles', 'Gongura Pickles', 'Chicken Pickles', 'Mutton Pickles', 'Fish Pickles', 'Mixed Pickles']);
+      setCategories([]); // Show empty state if backend fails
       console.error('Error loading categories:', error);
     }
   };
@@ -234,7 +231,7 @@ const ProductManagement: React.FC = () => {
       price: product.price,
       category: product.category || '',
       stock_quantity: product.stock_quantity,
-      image_urls: product.image_urls || (product.image_url ? [product.image_url] : []),
+      image_urls: product.image ? [product.image] : [],
       features: features,
       is_active: product.is_active !== false,
       brand: product.brand || '',
@@ -243,7 +240,7 @@ const ProductManagement: React.FC = () => {
       barcode: product.barcode || '',
       variants: product.variants || []
     });
-    setImagePreviews(product.image_urls || (product.image_url ? [product.image_url] : []));
+    setImagePreviews(product.image ? [product.image] : []);
     setIsEditDialogOpen(true);
   };
 
@@ -444,7 +441,7 @@ const ProductManagement: React.FC = () => {
                               {product.image_urls.map((url, index) => (
                                 <img 
                                   key={index}
-                                  src={url} 
+                                  src={`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : ''}${url}`} 
                                   alt={product.name} 
                                   className="w-20 h-20 object-cover rounded max-w-full"
                                   onError={(e) => {
@@ -456,7 +453,7 @@ const ProductManagement: React.FC = () => {
                             </div>
                           ) : product.image_url ? (
                             <img 
-                              src={product.image_url} 
+                              src={`${import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace('/api', '') : ''}${product.image_url}`} 
                               alt={product.name} 
                               className="w-20 h-20 object-cover rounded max-w-full"
                               onError={(e) => {
@@ -472,7 +469,7 @@ const ProductManagement: React.FC = () => {
                         </TableCell>
                         <TableCell className="font-medium">{product.name}</TableCell>
                         <TableCell>{product.category}</TableCell>
-                        <TableCell>${product.price.toFixed(2)}</TableCell>
+                        <TableCell>₹{product.price.toFixed(2)}</TableCell>
                         <TableCell>{product.stock_quantity}</TableCell>
                         <TableCell>
                           {product.is_active !== false ? (
@@ -698,7 +695,7 @@ const ProductManagement: React.FC = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="edit-price" className="text-sm font-medium">Price ($)</Label>
+                  <Label htmlFor="edit-price" className="text-sm font-medium">Price (₹)</Label>
                   <Input 
                     id="edit-price" 
                     type="number" 
@@ -1002,6 +999,3 @@ const ProductManagement: React.FC = () => {
 };
 
 export default ProductManagement;
-
-
-

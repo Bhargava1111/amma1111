@@ -694,19 +694,6 @@ export default function AuthPage() {
               )}
             </Button>
           </div>
-          
-          {/* Demo credentials info */}
-          <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
-            <p className="text-xs font-bold text-blue-600 mb-2 flex items-center justify-center gap-2">
-              <Star className="w-4 h-4" />
-              Demo Access 🎯
-            </p>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><span className="font-semibold">Email:</span> admin@example.com</p>
-              <p><span className="font-semibold">Password:</span> admin123</p>
-              <p><span className="font-semibold">Phone:</span> Any 6-digit OTP works!</p>
-            </div>
-          </div>
         </CardFooter>
       </Card>
     </div>

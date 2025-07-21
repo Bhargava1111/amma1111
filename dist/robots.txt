@@ -1,2 +1,23 @@
 User-agent: *
 Allow: /
+
+# Disallow admin and private pages
+Disallow: /admin
+Disallow: /profile
+Disallow: /checkout
+Disallow: /orders
+Disallow: /onauthsuccess
+Disallow: /resetpassword
+
+# Allow important pages
+Allow: /
+Allow: /products
+Allow: /blog
+Allow: /contact
+Allow: /auth
+
+# Sitemap location
+Sitemap: https://manafoods.com/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1
