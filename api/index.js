@@ -59,6 +59,74 @@ try {
   console.error('Error loading database:', error);
 }
 
+// Add sample data if database is empty
+if (db.banners.length === 0) {
+  db.banners = [
+    {
+      id: '1',
+      title: 'Welcome to MANAfoods',
+      subtitle: 'Traditional Indian Pickles',
+      image_url: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=800&h=400&fit=crop',
+      link: '/products',
+      active: true,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      title: 'Special Offers',
+      subtitle: 'Up to 30% off on selected items',
+      image_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&h=400&fit=crop',
+      link: '/offers',
+      active: true,
+      created_at: new Date().toISOString()
+    }
+  ];
+}
+
+if (db.products.length === 0) {
+  db.products = [
+    {
+      id: '1',
+      name: 'Mango Pickle',
+      description: 'Traditional spicy mango pickle',
+      price: 150,
+      image: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=400&fit=crop',
+      category: 'Pickles',
+      stock: 50,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Lemon Pickle',
+      description: 'Tangy lemon pickle with spices',
+      price: 120,
+      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
+      category: 'Pickles',
+      stock: 30,
+      created_at: new Date().toISOString()
+    }
+  ];
+}
+
+if (db.categories.length === 0) {
+  db.categories = [
+    {
+      id: '1',
+      name: 'Pickles',
+      description: 'Traditional Indian pickles',
+      image: 'https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?w=400&h=400&fit=crop',
+      created_at: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'Spices',
+      description: 'Authentic Indian spices',
+      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&h=400&fit=crop',
+      created_at: new Date().toISOString()
+    }
+  ];
+}
+
 // Save database function
 const saveDatabase = () => {
   try {
@@ -105,6 +173,62 @@ app.get('/api/categories', (req, res) => {
     res.json({
       success: true,
       data: db.categories
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/banners', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: db.banners
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/orders', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: db.orders
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/users', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: db.users
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.get('/api/notifications', (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: db.notifications
     });
   } catch (error) {
     res.status(500).json({
@@ -185,6 +309,91 @@ app.post('/api/auth/login', (req, res) => {
       }
     });
 
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// Additional API endpoints
+app.get('/api/table/:tableId', (req, res) => {
+  try {
+    const { tableId } = req.params;
+    let data = [];
+    
+    // Map table IDs to database collections
+    switch (tableId) {
+      case '10400': // Users
+        data = db.users;
+        break;
+      case '10401': // Products
+        data = db.products;
+        break;
+      case '10402': // Orders
+        data = db.orders;
+        break;
+      case '10403': // Categories
+        data = db.categories;
+        break;
+      case '10411': // User Profiles
+        data = db.userProfiles;
+        break;
+      case '10412': // Notifications
+        data = db.notifications;
+        break;
+      default:
+        data = [];
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        List: data,
+        TotalCount: data.length
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+app.post('/api/table/:tableId', (req, res) => {
+  try {
+    const { tableId } = req.params;
+    const data = req.body;
+    
+    // Handle table operations based on tableId
+    switch (tableId) {
+      case '10400': // Users
+        const newUser = { ...data, id: uuidv4(), created_at: new Date().toISOString() };
+        db.users.push(newUser);
+        break;
+      case '10401': // Products
+        const newProduct = { ...data, id: uuidv4(), created_at: new Date().toISOString() };
+        db.products.push(newProduct);
+        break;
+      case '10402': // Orders
+        const newOrder = { ...data, id: uuidv4(), created_at: new Date().toISOString() };
+        db.orders.push(newOrder);
+        break;
+      default:
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid table ID'
+        });
+    }
+    
+    saveDatabase();
+    
+    res.json({
+      success: true,
+      message: 'Data created successfully'
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
