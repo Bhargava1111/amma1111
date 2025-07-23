@@ -20,10 +20,10 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/dist/$1"
+      "dest": "/index.html"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   }
-} 
+}

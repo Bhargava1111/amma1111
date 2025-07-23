@@ -162,7 +162,7 @@
     // Table APIs
     tablePage: async (tableId, params) => {
       try {
-        const response = await fetch(`${API_BASE_URL}/table/${tableId}`, {
+        const response = await fetch(`${API_BASE_URL}/table/page/${tableId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

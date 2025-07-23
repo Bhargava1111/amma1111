@@ -428,43 +428,44 @@ app.get('/api/table/:tableId', (req, res) => {
   }
 });
 
-app.post('/api/table/:tableId', (req, res) => {
+app.post('/api/table/page/:tableId', (req, res) => {
   try {
     const { tableId } = req.params;
-    const data = req.body;
-    
-    // Handle table operations based on tableId
+    const { PageNo = 1, PageSize = 10, Filters = [] } = req.body;
+
+    let tableData = [];
     switch (tableId) {
-      case '10400': // Users
-        const newUser = { ...data, id: uuidv4(), created_at: new Date().toISOString() };
-        db.users.push(newUser);
-        break;
-      case '10401': // Products
-        const newProduct = { ...data, id: uuidv4(), created_at: new Date().toISOString() };
-        db.products.push(newProduct);
-        break;
-      case '10402': // Orders
-        const newOrder = { ...data, id: uuidv4(), created_at: new Date().toISOString() };
-        db.orders.push(newOrder);
+      case '10411':
+        tableData = db.userProfiles;
         break;
       default:
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid table ID'
-        });
+        return res.status(404).json({ success: false, error: 'Table not found' });
     }
-    
-    saveDatabase();
-    
+
+    let filteredData = tableData;
+    if (Filters.length > 0) {
+      Filters.forEach(filter => {
+        if (filter.op.toLowerCase() === 'like') {
+          filteredData = filteredData.filter(item =>
+            item[filter.name] && item[filter.name].toLowerCase().includes(filter.value.replace(/%/g, '').toLowerCase())
+          );
+        }
+      });
+    }
+
+    const start = (PageNo - 1) * PageSize;
+    const end = start + PageSize;
+    const paginatedData = filteredData.slice(start, end);
+
     res.json({
       success: true,
-      message: 'Data created successfully'
+      data: {
+        List: paginatedData,
+        VirtualCount: filteredData.length,
+      },
     });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
