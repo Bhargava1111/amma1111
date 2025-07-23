@@ -44,6 +44,10 @@
         if (result.success && result.data) {
           // Store user in localStorage for future use
           localStorage.setItem('user', JSON.stringify(result.data));
+          // Store session ID if provided
+          if (result.sessionId) {
+            localStorage.setItem('sessionId', result.sessionId);
+          }
         }
         
         return result;
@@ -103,7 +107,15 @@
       
       // If not in localStorage, try to get from API
       try {
-        const response = await fetch(`${API_BASE_URL}/getUserInfo`);
+        const sessionId = localStorage.getItem('sessionId');
+        const headers = {};
+        if (sessionId) {
+          headers['x-session-id'] = sessionId;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/getUserInfo`, {
+          headers: headers
+        });
         const result = await response.json();
         
         if (result.success) {
@@ -116,6 +128,34 @@
       } catch (error) {
         console.error('Get user info error:', error);
         return { data: null, error: error.message || 'Failed to get user info' };
+      }
+    },
+
+    logout: async () => {
+      try {
+        const sessionId = localStorage.getItem('sessionId');
+        const headers = {};
+        if (sessionId) {
+          headers['x-session-id'] = sessionId;
+        }
+        
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: headers
+        });
+        
+        // Clear local storage regardless of server response
+        localStorage.removeItem('user');
+        localStorage.removeItem('sessionId');
+        
+        const result = await response.json();
+        return result;
+      } catch (error) {
+        console.error('Logout error:', error);
+        // Clear local storage even if server call fails
+        localStorage.removeItem('user');
+        localStorage.removeItem('sessionId');
+        return { success: true, message: 'Logged out successfully' };
       }
     },
 

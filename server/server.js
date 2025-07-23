@@ -97,6 +97,9 @@ let db = {
   passwordResetTokens: [] // Added for password reset functionality
 };
 
+// Simple session store for authentication
+const sessions = new Map();
+
 // Load initial data if available
 const dataPath = path.join(__dirname, 'db.json');
 if (fs.existsSync(dataPath)) {
@@ -863,6 +866,15 @@ if (db.users.length === 0) {
   };
   db.users.push(testUser2);
 
+  // Add customer user for demo
+  const customerUser = {
+    ID: '4',
+    Name: 'Demo Customer',
+    Email: 'customer@example.com',
+    Password: 'customer123'
+  };
+  db.users.push(customerUser);
+
   // Add admin profile
   const adminProfile = {
     user_id: '1',
@@ -904,6 +916,20 @@ if (db.users.length === 0) {
     created_at: new Date().toISOString()
   };
   db.userProfiles.push(johnProfile);
+
+  // Add customer profile
+  const customerProfile = {
+    user_id: '4',
+    phone_number: '1111111111',
+    full_name: 'Demo Customer',
+    avatar_url: '',
+    email_notifications: true,
+    whatsapp_notifications: false,
+    marketing_notifications: true,
+    auth_method: 'email',
+    created_at: new Date().toISOString()
+  };
+  db.userProfiles.push(customerProfile);
 }
 
 // Initialize products only if they don't exist
@@ -1149,10 +1175,18 @@ app.post('/api/auth/login', (req, res) => {
     );
     
     if (user) {
+      // Create a session
+      const sessionId = uuidv4();
+      sessions.set(sessionId, { userId: user.ID, email: user.Email });
+      
       // Don't send password to client
       const { Password, ...userWithoutPassword } = user;
       const isAdmin = user.Email === 'admin@example.com';
-      res.json({ success: true, data: { ...userWithoutPassword, isAdmin } });
+      res.json({ 
+        success: true, 
+        data: { ...userWithoutPassword, isAdmin },
+        sessionId: sessionId
+      });
     } else {
       res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
@@ -1214,6 +1248,16 @@ app.get('/api/auth/user', (req, res) => {
   } else {
     res.status(401).json({ success: false, error: 'Not authenticated' });
   }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const sessionId = req.headers['x-session-id'] || req.body.sessionId;
+  
+  if (sessionId && sessions.has(sessionId)) {
+    sessions.delete(sessionId);
+  }
+  
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 // Forgot Password endpoint
@@ -1958,15 +2002,29 @@ app.post('/api/table/delete/:tableId', (req, res) => {
 
 // Get user info (for auth)
 app.get('/api/getUserInfo', (req, res) => {
-  // In a real app, this would use JWT or session
-  // For demo, we'll return the admin user
-  const adminUser = db.users.find(u => u.ID === '1');
-  if (adminUser) {
-    const { Password, ...userWithoutPassword } = adminUser;
-    const isAdmin = adminUser.Email === 'admin@example.com';
-    res.json({ success: true, data: { ...userWithoutPassword, isAdmin } });
+  const sessionId = req.headers['x-session-id'] || req.query.sessionId;
+  
+  if (sessionId && sessions.has(sessionId)) {
+    const session = sessions.get(sessionId);
+    const user = db.users.find(u => u.ID === session.userId);
+    
+    if (user) {
+      const { Password, ...userWithoutPassword } = user;
+      const isAdmin = user.Email === 'admin@example.com';
+      res.json({ success: true, data: { ...userWithoutPassword, isAdmin } });
+    } else {
+      res.status(401).json({ success: false, error: 'User not found' });
+    }
   } else {
-    res.status(401).json({ success: false, error: 'Not authenticated' });
+    // Fallback: check if there's a user in localStorage (for demo purposes)
+    const adminUser = db.users.find(u => u.ID === '1');
+    if (adminUser) {
+      const { Password, ...userWithoutPassword } = adminUser;
+      const isAdmin = adminUser.Email === 'admin@example.com';
+      res.json({ success: true, data: { ...userWithoutPassword, isAdmin } });
+    } else {
+      res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
   }
 });
 

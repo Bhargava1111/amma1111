@@ -29,6 +29,9 @@ let db = {
   productVariants: []
 };
 
+// Simple session store for authentication
+const sessions = new Map();
+
 // Load initial data if available
 const dataPath = path.join(__dirname, 'db.json');
 if (fs.existsSync(dataPath)) {
@@ -117,9 +120,17 @@ app.post('/api/auth/login', (req, res) => {
   const user = db.users.find(u => u.Email.toLowerCase() === email.toLowerCase() && u.Password === password);
   
   if (user) {
+    // Create a session
+    const sessionId = uuidv4();
+    sessions.set(sessionId, { userId: user.ID, email: user.Email });
+    
     // Don't send password to client
     const { Password, ...userWithoutPassword } = user;
-    res.json({ success: true, data: userWithoutPassword });
+    res.json({ 
+      success: true, 
+      data: userWithoutPassword,
+      sessionId: sessionId
+    });
   } else {
     res.status(401).json({ success: false, error: 'Invalid credentials' });
   }
@@ -173,6 +184,16 @@ app.get('/api/auth/user', (req, res) => {
   } else {
     res.status(401).json({ success: false, error: 'Not authenticated' });
   }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const sessionId = req.headers['x-session-id'] || req.body.sessionId;
+  
+  if (sessionId && sessions.has(sessionId)) {
+    sessions.delete(sessionId);
+  }
+  
+  res.json({ success: true, message: 'Logged out successfully' });
 });
 
 // Generic Table API
@@ -389,14 +410,27 @@ app.post('/api/table/delete/:tableId', (req, res) => {
 
 // Get user info (for auth)
 app.get('/api/getUserInfo', (req, res) => {
-  // In a real app, this would use JWT or session
-  // For demo, we'll return the admin user
-  const adminUser = db.users.find(u => u.ID === '1');
-  if (adminUser) {
-    const { Password, ...userWithoutPassword } = adminUser;
-    res.json({ success: true, data: userWithoutPassword });
+  const sessionId = req.headers['x-session-id'] || req.query.sessionId;
+  
+  if (sessionId && sessions.has(sessionId)) {
+    const session = sessions.get(sessionId);
+    const user = db.users.find(u => u.ID === session.userId);
+    
+    if (user) {
+      const { Password, ...userWithoutPassword } = user;
+      res.json({ success: true, data: userWithoutPassword });
+    } else {
+      res.status(401).json({ success: false, error: 'User not found' });
+    }
   } else {
-    res.status(401).json({ success: false, error: 'Not authenticated' });
+    // Fallback: check if there's a user in localStorage (for demo purposes)
+    const adminUser = db.users.find(u => u.ID === '1');
+    if (adminUser) {
+      const { Password, ...userWithoutPassword } = adminUser;
+      res.json({ success: true, data: userWithoutPassword });
+    } else {
+      res.status(401).json({ success: false, error: 'Not authenticated' });
+    }
   }
 });
 
