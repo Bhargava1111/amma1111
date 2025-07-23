@@ -56,6 +56,9 @@ let db = {
   passwordResetTokens: []
 };
 
+// Simple session store for authentication
+const sessions = new Map();
+
 // Load initial data if available
 try {
   const dbPath = path.join(__dirname, '../server/db.json');
