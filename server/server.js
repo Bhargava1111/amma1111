@@ -2477,7 +2477,7 @@ app.listen(PORT, () => {
 });
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/ezsite');
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ezsite');
 
 const mongoConnection = mongoose.connection;
 mongoConnection.on('error', console.error.bind(console, 'connection error:'));

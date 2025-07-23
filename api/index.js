@@ -27,6 +27,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ezsite');
+
+const mongoConnection = mongoose.connection;
+mongoConnection.on('error', console.error.bind(console, 'connection error:'));
+mongoConnection.once('open', function() {
+  console.log('Connected to MongoDB!');
+});
+
 // In-memory database (for development purposes)
 let db = {
   users: [],
@@ -177,8 +186,8 @@ const createEmailTransporter = () => {
   return nodemailer.createTransporter({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER || 'your-email@gmail.com',
-      pass: process.env.EMAIL_PASS || 'your-app-password'
+      user: process.env.SMTP_USER || 'your-email@gmail.com',
+      pass: process.env.SMTP_PASSWORD || 'your-app-password'
     }
   });
 };
@@ -470,4 +479,4 @@ app.use('*', (req, res) => {
 });
 
 // Export for Vercel
-export default app; 
+export default app;
